@@ -48,7 +48,7 @@ class BaseType(ABC):
 
         Example (name="my_var"): "int my_var = 42"
         """
-        return "{} = {};\n".format(self.render_var_decl(name), self.render_value(value))
+        return "{} = {};".format(self.render_var_decl(name), self.render_value(value))
 
 
 class ScalarType(BaseType):
@@ -240,6 +240,8 @@ class TopHelper:
         self._init_api()
         self._init_pads()
         self._init_irq_map()
+        if self.has_alert_handler():
+            self._init_alert_map()
         self._init_dev_type_map()
 
     def _init_api(self):
@@ -420,8 +422,9 @@ registers to connect a peripheral to this pad.""",  # noqa:E501
                                     Name(["plic", "irq", "id"])),
             length = Name(["count"])
         )
-        self.inst_from_irq_values = OrderedDict()
-        self.inst_from_irq_values = {Name(["none"]): Name(["unknown"])}
+        self.inst_from_irq_values = OrderedDict(
+            {Name(["none"]): Name(["unknown"])},
+        )
         for intr in self.top["interrupt"]:
             width = int(intr["width"])
             for i in range(width):
@@ -433,6 +436,31 @@ registers to connect a peripheral to this pad.""",  # noqa:E501
                 else:
                     module_name = Name.from_snake_case(intr["module_name"])
                 self.inst_from_irq_values[name] = module_name
+
+    def has_alert_handler(self):
+        # FIXME find a better way then just harcoding this module name
+        return any(module["name"] == "alert_handler" for module in self.top["module"])
+
+    def _init_alert_map(self):
+        """
+        Create the array mappings to dispatch alerts.
+        """
+        self.inst_from_alert_map = ArrayMapType(
+            elem_type = ScalarType(self.instance_id_enum.name),
+            index_type = ScalarType(Name(["top"]) +
+                                    Name.from_snake_case(self.top["name"]) +
+                                    Name(["alert", "id"])),
+            length = Name(["count"])
+        )
+        self.inst_from_alert_values = OrderedDict()
+        for alert in self.top["alert"]:
+            width = int(alert["width"])
+            for i in range(width):
+                name = Name.from_snake_case(alert["name"])
+                if width > 1:
+                    name += Name([str(i)])
+                self.inst_from_alert_values[name] = Name.from_snake_case(
+                    alert["module_name"])
 
     def _init_dev_type_map(self):
         """
@@ -460,6 +488,7 @@ class IpHelper:
     PERIPH_IO_FIELD_NAME = Name(["periph", "io"])
     DT_STRUCT_NAME_PREFIX = Name(["dt", "desc"])
     FIRST_IRQ_FIELD_NAME = Name(["first", "irq"])
+    FIRST_ALERT_FIELD_NAME = Name(["first", "alert"])
 
     def __init__(self, top_helper: TopHelper, ip: IpBlock, default_node: str,
                  enum_type, array_mapping_type):
@@ -483,6 +512,7 @@ class IpHelper:
 
         self._init_reg_blocks()
         self._init_irqs()
+        self._init_alerts()
         self._init_clocks()
         self._init_periph_io()
         self._init_instances()
@@ -523,6 +553,28 @@ class IpHelper:
             self.irq_enum.add_constant(Name.from_snake_case(irq), sig.desc)
         if isinstance(self.reg_block_enum, CEnum):
             self.irq_enum.add_constant(Name(["count"]), "Number of IRQs")
+
+    def has_alerts(self):
+        return len(self.ip.alerts) > 0
+
+    def has_alert_handler(self):
+        # FIXME find a better way then just harcoding this module name
+        return any(module["name"] == "alert_handler" for module in self.top["module"])
+
+    def _init_alerts(self):
+        device_alerts = OrderedDict()
+        for sig in self.ip.alerts:
+            if sig.bits.width() > 1:
+                for bit in range(sig.bits.width()):
+                    device_alerts[sig.name + str(bit)] = sig
+            else:
+                device_alerts[sig.name] = sig
+
+        self.alert_enum = self._enum_type(Name([]), Name(["dt"]) + self.ip_name + Name(["alert"]))
+        for (alert, sig) in device_alerts.items():
+            self.alert_enum.add_constant(Name.from_snake_case(alert), sig.desc)
+        if isinstance(self.reg_block_enum, CEnum):
+            self.alert_enum.add_constant(Name(["count"]), "Number of Alerts")
 
     def has_clocks(self):
         return len(self._device_clocks) > 0
@@ -633,6 +685,18 @@ class IpHelper:
 
 This can be `kDtPlicIrqIdNone` if the block is not connected to the PLIC."""
             )
+        if self.has_alerts() and self.has_alert_handler():
+            # FIXME We need to handle better the case where a block is
+            # not connected to the Alert Handler.
+            self.inst_struct.add_field(
+                name = self.FIRST_ALERT_FIELD_NAME,
+                field_type = ScalarType(Name(["top"]) +
+                                        Name.from_snake_case(self.top["name"]) +
+                                        Name(["alert", "id"])),
+                docstring = """Alert ID of the first Alert of this instance.
+
+This value is undefined if the block is not connected to the Alert Handler."""
+            )
         if self.has_clocks():
             self.inst_struct.add_field(
                 name = self.CLOCK_FIELD_NAME,
@@ -712,6 +776,25 @@ This can be `kDtPlicIrqIdNone` if the block is not connected to the PLIC."""
             else:
                 first_irq = irqs[0]
             inst_desc[self.FIRST_IRQ_FIELD_NAME] = first_irq
+        # First Alert
+        if self.has_alerts() and self.has_alert_handler():
+            alerts_packed = [alert for alert in self.top["alert"]
+                             if alert["module_name"] == modname]
+            alerts = []
+            for alert in alerts_packed:
+                alert_name = Name.from_snake_case(alert["name"])
+                alert_width = int(alert["width"])
+                if alert_width > 1:
+                    for i in range(alert_width):
+                        alerts.append(alert_name + Name([str(i)]))
+                else:
+                    alerts.append(alert_name)
+            # Because the alert information is generated by topgen, if the block has alerts and
+            # the top instantiates an Alert Handler, the alerts must be connected to the Alert
+            # Handler. Assert to check this is the case.
+            assert len(alerts) > 0, \
+                   "An IP declares alerts but does not connect them to the Alert Handler."
+            inst_desc[self.FIRST_ALERT_FIELD_NAME] = alerts[0]
         # Periph I/O
         if self.has_periph_io():
             periph_ios = OrderedDict()
