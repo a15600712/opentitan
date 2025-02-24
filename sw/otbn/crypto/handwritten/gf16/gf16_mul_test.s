@@ -4,8 +4,8 @@
 val_a:
     .word 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0
 val_b:
-/* 256-bit operand: "2" in the lowest word, zeros above. */
-    .word 0x0000000F, 0, 0, 0, 0, 0, 0, 0
+/* 256-bit operand: "F" in the lowest word, zeros above. */
+    .word 0x0000000F,0, 0, 0, 0, 0, 0, 0
 
 
 .section .text
