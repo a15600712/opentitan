@@ -42,9 +42,9 @@ gf16_mul:
     
     /*w0 = a * (w31)*/
     bn.mulqacc.wo.z   w0, w1.0, w31.0, 0  /* {Result} w0 = w31 * {a} w1.q0[63-0]*/
-    bn.mulqacc.wo.z   w0, w1.1, w31.0, 64
-    bn.mulqacc.wo.z   w0, w1.2, w31.0, 128
-    bn.mulqacc.wo.z   w0, w1.3, w31.0, 192
+    bn.mulqacc.wo   w0, w1.1, w31.0, 64
+    bn.mulqacc.wo   w0, w1.2, w31.0, 128
+    bn.mulqacc.wo   w0, w1.3, w31.0, 192
 
     /*a_msb = mask_msb & {a} w1*/
     bn.and w4, w3, w1 
