@@ -1,4 +1,4 @@
-load("//rules:otbn.bzl", "otbn_library", "otbn_binary", "otbn_sim_test", "otbn_sim_py_test")
+load("//rules:otbn.bzl", "otbn_library", "otbn_binary", "otbn_sim_test")
 
 # Create a library with the GF256 multiplication implementation
 otbn_library(
