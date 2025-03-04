@@ -46,7 +46,7 @@ void setup_pads_spi_host0(dif_pinmux_t *pinmux) {
       .drive_strength = 0,
       .flags = kDifPinmuxPadAttrPullResistorEnable |
                kDifPinmuxPadAttrPullResistorUp};
-  for (uint32_t i = 0; i <= ARRAYSIZE(spi_host0_direct_pads); ++i) {
+  for (uint32_t i = 0; i < ARRAYSIZE(spi_host0_direct_pads); ++i) {
     CHECK_DIF_OK(dif_pinmux_pad_write_attrs(pinmux, spi_host0_direct_pads[i],
                                             kDifPinmuxPadKindDio, in_attr,
                                             &out_attr));
@@ -74,7 +74,7 @@ void setup_spi_dma_transaction(dif_spi_host_t *spi_host, dif_dma_t *dma,
                  .asid = kDifDmaOpentitanInternalBus},
       .destination = {.address = (uint32_t)&rx_buffer[0],
                       .asid = kDifDmaOpentitanInternalBus},
-      .src_config = {.wrap = false, .increment = false},
+      .src_config = {.wrap = true, .increment = false},
       .dst_config = {.wrap = false, .increment = true},
       .total_size = total_size,
       .chunk_size = chunk_size,

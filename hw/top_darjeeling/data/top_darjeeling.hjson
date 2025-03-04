@@ -344,7 +344,7 @@
       reset_connections: {rst_ni: "lc_io_div4", rst_edn_ni: "lc"},
       base_addrs: {
         core: {hart: "0x30130000"},
-        prim: {hart: "0x30138000"},
+        prim: {hart: "0x30140000"},
       }
       attr: "ipgen",
     },
@@ -354,8 +354,8 @@
       clock_group: "secure",
       reset_connections: {rst_ni: "lc_io_div4", rst_kmac_ni: "lc"},
       base_addrs: {
-        regs: {hart: "0x30140000"},
-        dmi:  {soc_dbg: "0x00020000"},
+        regs: {hart: "0x30150000"},
+        dmi:  {soc_dbg: "0x3000"},
       },
       param_decl: {
         // NOTE THAT THIS IS A FEATURE FOR TEST CHIPS ONLY TO MITIGATE
@@ -380,7 +380,7 @@
       clock_group: "secure",
       reset_connections: {rst_ni: "lc_io_div4", rst_edn_ni: "lc"},
       base_addr: {
-        hart: "0x30150000",
+        hart: "0x30160000",
       },
       attr: "ipgen",
     },
@@ -983,7 +983,7 @@
       reset_connections: {rst_ni: "lc"},
       base_addrs: {
         core: {hart: "0x22000800"},
-        soc:  {soc_dbg: "0x1000"},
+        soc:  {soc_dbg: "0x2200"},
       },
       racl_mappings: {
         soc: 'racl/all_rd_wr_mapping.hjson'
@@ -1021,7 +1021,7 @@
       clock_group: "secure",
       reset_connections: {rst_ni: "lc_io_div4"},
       base_addrs: {
-        core:  {hart: "0x30160000"},
+        core:  {hart: "0x30170000"},
         jtag:  {soc_dbg: "0x2300"},
       },
     },
@@ -1032,7 +1032,7 @@
       clock_group: "infra",
       reset_connections: {rst_ni: "lc"},
       base_addr: {
-        soc_mbx: "0x01463000",
+        soc_mbx: "0x01461f00",
       },
       attr: "ipgen"
     },

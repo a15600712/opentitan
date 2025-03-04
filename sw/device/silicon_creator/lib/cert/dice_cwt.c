@@ -38,12 +38,15 @@ enum payload_entry_sizes {
   kProfileNameLength = 10,
   // The Key ID length, which equals to the SHA256 digest size in bytes
   kIssuerSubjectKeyIdLength = kHmacDigestNumBytes,
-  // The size of issuer & subject name, which equals to the ascii size
-  // transformed form Key ID.
-  kIssuerSubjectNameLength = kIssuerSubjectKeyIdLength * 2,
+  // The identifiers are 20 octets (reserve double size for HEX translation) so
+  // they fit in the RFC 5280 serialNumber field constraints and the
+  // X520SerialNumber type when hex encoded.
+  kIssuerSubjectNameLength = 40,
   // 64 byte should be enough for 2 entries
   kConfigDescBuffSize = 64,
 };
+static_assert(kIssuerSubjectNameLength < (1u << kIssuerSubjectKeyIdLength),
+              "Insufficient SubjectNameLength");
 
 // Reusable buffer for generating Configuration Descriptor
 static uint8_t config_desc_buf[kConfigDescBuffSize] = {0};
@@ -57,7 +60,16 @@ static ecdsa_p256_signature_t curr_tbs_signature = {.r = {0}, .s = {0}};
 #define CWT_PROFILE_NAME "android.16"
 
 // Debug=2, Normal=1
-static uint8_t get_chip_mode(void) {
+//
+// Two function variants are created to prevent linking both lifecycle
+// functions that would result in additional firmware space costs.
+// This is because Immutable ROM_EXT (CDI0) is linked with lifecycle_is_prod,
+// while mutable ROM_EXT (CDI_1) is linked with lifecycle_state_get.
+static uint8_t get_chip_mode_cdi0(void) {
+  return (lifecycle_is_prod() ? 1 : 2);
+}
+
+static uint8_t get_chip_mode_cdi1(void) {
   return ((lifecycle_state_get() == kLcStateProd) ? 1 : 2);
 }
 
@@ -68,26 +80,38 @@ static void fill_dice_id_string(
     const uint8_t dice_id[kIssuerSubjectKeyIdLength],
     char dice_id_str[kIssuerSubjectNameLength + 1]) {
   size_t idx;
-  for (idx = 0; idx < kIssuerSubjectKeyIdLength; idx++, dice_id_str += 2)
+  for (idx = 0; idx * 2 < kIssuerSubjectNameLength; idx++, dice_id_str += 2)
     util_hexdump_byte(dice_id[idx], (uint8_t *)&dice_id_str[0]);
 }
 
 static rom_error_t configuration_descriptor_build(
-    uint8_t *buf, size_t *buf_size, const size_t sec_version,
+    size_t *buf_size, const size_t sec_version,
     const hmac_digest_t *manifest_measurement) {
-  struct CborOut kCborOutHandle;
-  struct CborOut *pCborOut = &kCborOutHandle;
-  HARDENED_RETURN_IF_ERROR(
-      cbor_write_out_init(pCborOut, config_desc_buf, *buf_size));
-  HARDENED_RETURN_IF_ERROR(
-      cbor_map_init(pCborOut, (manifest_measurement != NULL) ? 2 : 1));
-  HARDENED_RETURN_IF_ERROR(
-      cbor_write_pair_int_uint(pCborOut, kSecurityVersionLabel, sec_version));
-  if (manifest_measurement != NULL)
-    HARDENED_RETURN_IF_ERROR(cbor_write_pair_int_bytes(
-        pCborOut, kOwnerManifestMeasurmentLabel,
-        (uint8_t *)&manifest_measurement->digest[0], kHmacDigestNumBytes));
-  *buf_size = CborOutSize(pCborOut);
+  cbor_out_t cbor_out;
+  cbor_out_init(&cbor_out, config_desc_buf);
+
+  cbor_out_t *ptrs[2] = {NULL, &cbor_out};
+  const size_t ptrs_len = sizeof(ptrs) / sizeof(ptrs[0]);
+
+  for (size_t i = 0; i < ptrs_len; ++i) {
+    cbor_out_t *cbor = ptrs[i];
+    size_t sz = 0;
+
+    sz += cbor_write_map_header(cbor, (manifest_measurement != NULL) ? 2 : 1);
+    sz += cbor_write_int(cbor, kSecurityVersionLabel);
+    sz += cbor_write_int(cbor, sec_version);
+
+    if (manifest_measurement != NULL) {
+      sz += cbor_write_int(cbor, kOwnerManifestMeasurmentLabel);
+      sz += cbor_write_bstr(cbor, (uint8_t *)&manifest_measurement->digest[0],
+                            kHmacDigestNumBytes);
+    }
+
+    if (sz > *buf_size)
+      return kErrorCertInvalidSize;
+  }
+
+  *buf_size = cbor_out_size(&cbor_out);
 
   return kErrorOk;
 }
@@ -109,6 +133,11 @@ rom_error_t dice_uds_tbs_cert_build(
   // structure.
   // Those otp_*measurement parameters exist just for API alignment between
   // different implementations.
+  OT_DISCARD(otp_creator_sw_cfg_measurement);
+  OT_DISCARD(otp_owner_sw_cfg_measurement);
+  OT_DISCARD(otp_rot_creator_auth_codesign_measurement);
+  OT_DISCARD(otp_rot_creator_auth_state_measurement);
+  OT_DISCARD(key_ids);
   HARDENED_RETURN_IF_ERROR(
       cwt_cose_key_build(&cwt_cose_key_params, tbs_cert, tbs_cert_size));
 
@@ -143,7 +172,7 @@ rom_error_t dice_cdi_0_cert_build(hmac_digest_t *rom_ext_measurement,
   // No extension measurement is needed in CDI_0, just pass a NULL to the
   // config_descriptors to bypass encoding.
   HARDENED_RETURN_IF_ERROR(configuration_descriptor_build(
-      config_desc_buf, &config_desc_buf_size, rom_ext_security_version, NULL));
+      &config_desc_buf_size, rom_ext_security_version, NULL));
   hmac_digest_t conf_hash;
   hmac_sha256(config_desc_buf, config_desc_buf_size, &conf_hash);
   util_reverse_bytes(conf_hash.digest, kHmacDigestNumBytes);
@@ -154,7 +183,7 @@ rom_error_t dice_cdi_0_cert_build(hmac_digest_t *rom_ext_measurement,
   hmac_sha256(kCborMap0, sizeof(kCborMap0), &auth_hash);
   util_reverse_bytes(auth_hash.digest, kHmacDigestNumBytes);
 
-  uint8_t mode = get_chip_mode();
+  uint8_t mode = get_chip_mode_cdi0();
   cwt_dice_chain_entry_payload_values_t cwt_dice_chain_entry_payload_params = {
       .auth_hash = (uint8_t *)&auth_hash.digest[0],
       .auth_hash_size = kHmacDigestNumBytes,
@@ -239,7 +268,7 @@ rom_error_t dice_cdi_1_cert_build(hmac_digest_t *owner_measurement,
 
   size_t config_desc_buf_size = sizeof(config_desc_buf);
   HARDENED_RETURN_IF_ERROR(configuration_descriptor_build(
-      config_desc_buf, &config_desc_buf_size, owner_security_version,
+      &config_desc_buf_size, owner_security_version,
       owner_manifest_measurement));
   hmac_digest_t conf_hash;
   hmac_sha256(config_desc_buf, config_desc_buf_size, &conf_hash);
@@ -251,7 +280,7 @@ rom_error_t dice_cdi_1_cert_build(hmac_digest_t *owner_measurement,
   hmac_sha256(kCborMap0, sizeof(kCborMap0), &auth_hash);
   util_reverse_bytes(auth_hash.digest, kHmacDigestNumBytes);
 
-  uint8_t mode = get_chip_mode();
+  uint8_t mode = get_chip_mode_cdi1();
   cwt_dice_chain_entry_payload_values_t cwt_dice_chain_entry_payload_params = {
       .auth_hash = (uint8_t *)&auth_hash.digest[0],
       .auth_hash_size = kHmacDigestNumBytes,
