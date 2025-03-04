@@ -1,24 +1,15 @@
 load("//rules:otbn.bzl", "otbn_library", "otbn_binary","otbn_sim_test")
 
+
 otbn_library(
-    name = "gf16_mul",
-    srcs = ["gf16_mul.s"],
+    name = "gf16_mul",         # The library/app containing just gf16_mul
+    srcs = ["gf16_mul.s"],     # Only the multiplication code
 )
-
-# otbn_binary(
-#     name="gf16_mul_test",
-#     srcs=["gf16_mul_test.s"],
-#     deps=[":gf16_mul"],
-    
-
-# )
 
 otbn_sim_test(
-    name="gf16_mul_test",
-    
-    srcs=["gf16_mul_test.s"],
-    exp="gf16_mul_test.exp",
-    deps=[":gf16_mul"],
-    
-
+    name = "gf16_mul_test",    # The test with 'main:'
+    srcs = ["gf16_mul_test.s"],
+    exp = "gf16_mul_test.exp",
+    deps = [":gf16_mul"],      # So the test can call gf16_mul
 )
+

@@ -26,25 +26,29 @@ w8:
 w27: one
 w28: temp
 w29: temp
-w30: zeros
-w31: temp
+w30: temp
+w31: zeros
 */
 
 gf16_mul:
+
+    /*make sure w31 is zero*/
+    bn.xor w31, w31, w31
+    
     /*Set up msb_mask in w3*/
     la x5, qword_msb
     li x6, 3
     bn.lid x6, 0(x5)       
+    /*w30= b & 1*/
 
-    /*w31= b & 1*/
-    bn.addi w27, w27, 1 /*{temp} w31 = 1 */
-    bn.and w31, w2, w27 /*{temp} w31 = {1} w31 & {b} w2*/
+    bn.addi w27, w27, 1 /*{temp} w30 = 1 */
+    bn.and w30, w2, w27 /*{temp} w30 = {1} w30 & {b} w2*/
+    /*w0 = a * (w30)*/
     
-    /*w0 = a * (w31)*/
-    bn.mulqacc.z    w1.0, w31.0, 0  /* {Result} w0 = w31 * {a} w1.q0[63-0]*/
-    bn.mulqacc      w1.1, w31.0, 64
-    bn.mulqacc      w1.2, w31.0, 128
-    bn.mulqacc.wo   w0, w1.3, w31.0, 192
+    bn.mulqacc.z    w1.0, w30.0, 0  /* {Result} w0 = w30 * {a} w1.q0[63-0]*/
+    bn.mulqacc      w1.1, w30.0, 64
+    bn.mulqacc      w1.2, w30.0, 128
+    bn.mulqacc.wo   w0, w1.3, w30.0, 192
 
     /*a_msb = mask_msb & {a} w1*/
     bn.and w4, w3, w1 
@@ -53,87 +57,87 @@ gf16_mul:
 
 
     /*w1 = a << 1*/
-    bn.rshi w1, w1, w30 >> 255  /* ( w1 || zeros ) >> 255 equivalent to w1 << 1*/
+    bn.rshi w1, w1, w31 >> 255  /* ( w1 || zeros ) >> 255 equivalent to w1 << 1*/
     
     /*w4 = a_msb >> 3*/
-    bn.rshi w4, w30, w4 >> 3    /* ( zeros || w4 ) >> 3 equivalent to w4 >> 3*/
+    bn.rshi w4, w31, w4 >> 3    /* ( zeros || w4 ) >> 3 equivalent to w4 >> 3*/
 
     /* w29 = 3*/
-    bn.addi w29, w30, 3 
+    bn.addi w29, w31, 3 
+    /*w30 = w4 * w29 */
 
-    /*w31 = w4 * w29 */
+    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
     bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w31.l, w4.1, w29.0, 64  
+    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
     bn.mulqacc      w4.2, w29.0, 0          
-    bn.mulqacc.so   w31.u, w4.3, w29.0, 64  
 
 
+    bn.xor w1, w1, w30 
     /*w1 = (a<<1) ^ ((a_msb >> 3) * 3)*/
-    bn.xor w1, w1, w31 
+    /*w30 = b >> 1*/
 
-    /*w31 = b >> 1*/
-    bn.rshi w31, w30, w2 >> 1 /*w31 = ( w30 || w2 ) >> 1*/
+    bn.rshi w30, w31, w2 >> 1 /*w30 = ( w31 || w2 ) >> 1*/
     /*w29 = 1*/
-    bn.addi w29, w30, 1 /* {temp} w29 = {zeros} w30 + 1*/
-    /*w31 = w31 & w29*/
-    bn.and w31, w29, w31
+    /*w30 = w30 & w29*/
+    bn.addi w29, w31, 1 /* {temp} w29 = {zeros} w31 + 1*/
+    bn.and w30, w29, w30
 
+    bn.mulqacc.z    w1.0, w30.0, 0          
     /*w29 = (a64) * ((b32 >> 1) & 1)*/
-    bn.mulqacc.z    w1.0, w31.0, 0          
-    bn.mulqacc.so   w29.l, w1.1, w31.0, 64  
-    bn.mulqacc      w1.2, w31.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w31.0, 64  
+    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 0          
+    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
 
     /*w0 = w0 ^ w29*/
     bn.xor w0, w0, w29
 
     bn.and w4, w3, w1
     bn.xor w1, w1, w4
-    bn.rshi w1, w1, w30 >> 255
-    bn.rshi w4, w30, w4 >> 3
+    bn.rshi w1, w1, w31 >> 255
+    bn.rshi w4, w31, w4 >> 3
 
-    bn.addi w29, w30, 3
+    bn.addi w29, w31, 3
 
+    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
     bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w31.l, w4.1, w29.0, 64  
+    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
     bn.mulqacc      w4.2, w29.0, 0          
-    bn.mulqacc.so   w31.u, w4.3, w29.0, 64  
-    bn.xor w1, w1, w31 
+    bn.xor w1, w1, w30 
+    bn.rshi w30, w31, w2 >> 2
 
-    bn.rshi w31, w30, w2 >> 2
-    bn.addi w29, w30, 1
+    bn.addi w29, w31, 1
+    bn.and w30, w29, w30
 
-    bn.and w31, w29, w31
+    bn.mulqacc.z    w1.0, w30.0, 0          
 
-    bn.mulqacc.z    w1.0, w31.0, 0          
-    bn.mulqacc.so   w29.l, w1.1, w31.0, 64  
-    bn.mulqacc      w1.2, w31.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w31.0, 64  
+    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 0          
+    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
 
     bn.xor w0, w0, w29
 
     bn.and w4, w3, w1
     bn.xor w1, w1, w4
-    bn.rshi w1, w1, w30 >> 255
-    bn.rshi w4, w30, w4 >> 3
+    bn.rshi w1, w1, w31 >> 255
+    bn.rshi w4, w31, w4 >> 3
 
-    bn.addi w29, w30, 3
+    bn.addi w29, w31, 3
 
+    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
     bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w31.l, w4.1, w29.0, 64  
+    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
     bn.mulqacc      w4.2, w29.0, 0          
-    bn.mulqacc.so   w31.u, w4.3, w29.0, 64  
-    bn.xor w1, w1, w31 
+    bn.xor w1, w1, w30 
+    bn.rshi w30, w31, w2 >> 3
 
-    bn.rshi w31, w30, w2 >> 3
-    bn.addi w29, w30, 1
+    bn.addi w29, w31, 1
+    bn.and w30, w29, w30
 
-    bn.and w31, w29, w31
+    bn.mulqacc.z    w1.0, w30.0, 0          
 
-    bn.mulqacc.z    w1.0, w31.0, 0          
-    bn.mulqacc.so   w29.l, w1.1, w31.0, 64  
-    bn.mulqacc      w1.2, w31.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w31.0, 64  
+    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 0          
+    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
 
     bn.xor w0, w0, w29
 
