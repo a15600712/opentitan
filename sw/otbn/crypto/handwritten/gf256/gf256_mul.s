@@ -31,6 +31,9 @@ w31: zeros
 
 
 gf256_mul:
+    /*make sure w31 is zero*/
+    bn.xor w31, w31, w31
+
     /*Set up msb_mask in w3 */
     la x5, qword_msb
     li x6, 3

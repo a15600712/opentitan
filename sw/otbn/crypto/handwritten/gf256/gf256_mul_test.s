@@ -1,11 +1,13 @@
+/*gf256_mul_test.s*/
+
 .align 4
 .section .data
 /* 256-bit operand*/
 val_a:
     .word 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0,0x12345678, 0x9ABCDEF0,0x12345678, 0x9ABCDEF0
 val_b:
-/* 256-bit operand: "7" in the lowest word, zeros above. */
-    .word 0x0000000f, 0, 0, 0, 0, 0, 0, 0
+/* 256-bit operand: "0" in the lowest word, zeros above. */
+    .word 0x0000000A, 0, 0, 0, 0, 0, 0, 0
 
 
 .section .text
