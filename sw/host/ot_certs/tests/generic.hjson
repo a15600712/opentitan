@@ -7,78 +7,75 @@
     variables: {
         serial_number: {
             type: "integer",
-            range-size: [0, 32],
+            size: 32,
         },
         not_before: {
             type: "string",
-            exact-size: 15,
+            size: 15,
         }
         not_after: {
             type: "string",
-            exact-size: 15,
+            size: 15,
         }
         subject_serial_number: {
             type: "string",
-            exact-size: 40,
+            size: 40,
         },
         issuer_c: {
             type: "string",
-            exact-size: 2,
+            size: 2,
         },
         issuer_cn: {
             type: "string",
-            exact-size: 20,
+            size: 20,
         },
         vendor: {
             type: "string",
-            exact-size: 50,
+            size: 15,
         },
         model: {
             type: "string",
-            exact-size: 50,
+            size: 20,
         },
         layer: {
             type: "integer",
-            range-size: [0, 4],
+            size: 4,
         },
         pub_key_ec_x: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         pub_key_ec_y: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         pub_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         auth_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         hash_1: {
             type: "byte-array",
-            exact-size: 20,
+            size: 20,
         },
         hash_2: {
             type: "byte-array",
-            exact-size: 20,
+            size: 20,
         },
         security_version: {
-            type: "byte-array",
-            exact-size: 4,
-            tweak-msb: true,
+            type: "integer",
+            size: 4,
         }
         cert_signature_r: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
         cert_signature_s: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
         not_configured: {
             type: "boolean",
@@ -97,15 +94,15 @@
         }
         tpm_vendor: {
             type: "string",
-            exact-size: 100,
+            size: 100,
         }
         tpm_model: {
             type: "string",
-            exact-size: 100,
+            size: 100,
         }
         tpm_version: {
             type: "string",
-            exact-size: 100,
+            size: 100,
         }
         key_usage_cert_sign: {
             type: "boolean"
@@ -157,7 +154,7 @@
                 type: "dice_tcb_info",
                 vendor: { var: "vendor" },
                 model: { var: "model" },
-                svn: { var: "security_version", convert: "big-endian" },
+                svn: { var: "security_version" },
                 layer: { var: "layer" },
                 fw_ids: [
                     { hash_algorithm: "sha256", digest: { var: "hash_1" } },

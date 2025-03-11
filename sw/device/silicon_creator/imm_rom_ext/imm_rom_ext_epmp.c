@@ -44,6 +44,8 @@ static const epmp_region_t kImmTextRegion = {
 };
 
 rom_error_t imm_rom_ext_epmp_reconfigure(void) {
+  lifecycle_state_t lc_state = lifecycle_state_get();
+
   // ePMP region 15 gives read/write access to RAM.
   // Leave it unchanged.
 
@@ -57,7 +59,7 @@ rom_error_t imm_rom_ext_epmp_reconfigure(void) {
 
   // ePMP region 12 allows RvDM access.
   // This RvDM region was in ePMP region 13.
-  if (lifecycle_is_prod() == kHardenedBoolTrue) {
+  if (lc_state == kLcStateProd || lc_state == kLcStateProdEnd) {
     // No RvDM access in Prod states, so we can clear the entry.
     epmp_clear(12);
   } else {

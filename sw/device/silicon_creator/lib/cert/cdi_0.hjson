@@ -10,46 +10,43 @@
         // (x and y) which are 32-bytes integers.
         owner_intermediate_pub_key_ec_x: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         owner_intermediate_pub_key_ec_y: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         // Owner intermediate public key ID: this is a 20-byte hash
         // derived from the owner intermediate public key.
         owner_intermediate_pub_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         // This is the identifier of the public key used to
         // sign this certificate (creator key).
         creator_pub_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         // Hash of the ROM_EXT (SHA256).
         rom_ext_hash: {
             type: "byte-array",
-            exact-size: 32,
+            size: 32,
         },
         // ROM_EXT security version, used to prevent rollback.
         rom_ext_security_version: {
-            type: "byte-array",
-            exact-size: 4,
-            tweak-msb: true,
+            type: "integer",
+            size: 4,
         }
         // Certificate signature: the result of signing with ECDSA
         // are two integers named "r" and "s"
         cert_signature_r: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
         cert_signature_s: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
     },
 
@@ -88,7 +85,7 @@
                 type: "dice_tcb_info",
                 vendor: "OpenTitan",
                 model: "ROM_EXT",
-                svn: { var: "rom_ext_security_version", convert: "big-endian" },
+                svn: { var: "rom_ext_security_version" },
                 layer: 1,
                 fw_ids: [
                     { hash_algorithm: "sha256", digest: { var: "rom_ext_hash" } },

@@ -88,6 +88,3 @@ book
 
 # Hugo Lock
 .hugo_build.lock
-
-# Custom Ruff config overrides
-.ruff.toml
