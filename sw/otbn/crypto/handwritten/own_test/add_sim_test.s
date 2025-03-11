@@ -1,6 +1,6 @@
 /* add_sim_test.s */
 
-.align 4
+.balign 4
 .section .data
 
 val_a:

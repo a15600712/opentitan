@@ -1,7 +1,7 @@
 /* add.s*/
 /* Defines a function "add". */
 /* This trivial example sets w10 = w10 + w11.*/
-.align 4
+.balign 4
 .section .text
 .globl add
 add:
