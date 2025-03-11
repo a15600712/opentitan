@@ -165,13 +165,15 @@ FLASH_CTRL_INFO_PAGES_DEFINE(INFO_PAGE_STRUCT_DECL_);
  * ```
  */
 enum {
-  kFlashCtrlSecMmioCreatorInfoPagesLockdown = 16,
   kFlashCtrlSecMmioCertInfoPageCreatorCfg = 2,
   kFlashCtrlSecMmioCertInfoPageOwnerRestrict = 1,
+  kFlashCtrlSecMmioCertInfoPagesOwnerRestrict = 5,
+  kFlashCtrlSecMmioCreatorInfoPagesLockdown = 12,
   kFlashCtrlSecMmioDataDefaultCfgSet = 1,
   kFlashCtrlSecMmioDataDefaultPermsSet = 1,
   kFlashCtrlSecMmioExecSet = 1,
   kFlashCtrlSecMmioInfoCfgSet = 1,
+  kFlashCtrlSecMmioInfoCfgLock = 1,
   kFlashCtrlSecMmioInfoPermsSet = 1,
   kFlashCtrlSecMmioBankErasePermsSet = 1,
   kFlashCtrlSecMmioInit = 3,
@@ -336,6 +338,15 @@ OT_WARN_UNUSED_RESULT
 rom_error_t flash_ctrl_info_read_zeros_on_read_error(
     const flash_ctrl_info_page_t *info_page, uint32_t offset,
     uint32_t word_count, void *data);
+
+/**
+ * Locks the configuration of an information page.
+ *
+ * This writes a zero to the write-enable register for info page configuration.
+ *
+ * @param info_page Information page to read from.
+ */
+void flash_ctrl_info_lock(const flash_ctrl_info_page_t *info_page);
 
 /**
  * Writes data to the data partition.
@@ -569,6 +580,18 @@ void flash_ctrl_info_cfg_set(const flash_ctrl_info_page_t *info_page,
                              flash_ctrl_cfg_t cfg);
 
 /**
+ * Write-locks configuration settings for an info page.
+ *
+ * The caller is responsible for calling
+ * `SEC_MMIO_WRITE_INCREMENT(kFlashCtrlSecMmioInfoCfgLock)` when sec_mmio is
+ * being used to check expectations.
+ *
+ * @param info_page An information page.
+ * @param cfg New configuration settings.
+ */
+void flash_ctrl_info_cfg_lock(const flash_ctrl_info_page_t *info_page);
+
+/**
  * Set bank erase permissions for both flash banks.
  *
  * The caller is responsible for calling
@@ -625,7 +648,7 @@ extern const flash_ctrl_perms_t kCertificateInfoPageOwnerAccess;
  * handing over execution to the owner boot stage.
  *
  * The caller is responsible for calling
- * `SEC_MMIO_WRITE_INCREMENT(kFlashCtrlSecMmioCertInfoPagesCreatorCfg)`
+ * `SEC_MMIO_WRITE_INCREMENT(kFlashCtrlSecMmioCertInfoPageCreatorCfg)`
  * when sec_mmio is being used to check expectations.
  */
 void flash_ctrl_cert_info_page_creator_cfg(

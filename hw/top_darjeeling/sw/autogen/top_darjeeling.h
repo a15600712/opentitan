@@ -144,7 +144,7 @@ extern "C" {
  * This should be used with #mmio_region_from_addr to access the memory-mapped
  * registers associated with the peripheral (usually via a DIF).
  */
-#define TOP_DARJEELING_OTP_CTRL_PRIM_BASE_ADDR 0x30138000u
+#define TOP_DARJEELING_OTP_CTRL_PRIM_BASE_ADDR 0x30140000u
 
 /**
  * Peripheral size for prim device on otp_ctrl in top darjeeling.
@@ -162,7 +162,7 @@ extern "C" {
  * This should be used with #mmio_region_from_addr to access the memory-mapped
  * registers associated with the peripheral (usually via a DIF).
  */
-#define TOP_DARJEELING_LC_CTRL_REGS_BASE_ADDR 0x30140000u
+#define TOP_DARJEELING_LC_CTRL_REGS_BASE_ADDR 0x30150000u
 
 /**
  * Peripheral size for regs device on lc_ctrl in top darjeeling.
@@ -180,7 +180,7 @@ extern "C" {
  * This should be used with #mmio_region_from_addr to access the memory-mapped
  * registers associated with the peripheral (usually via a DIF).
  */
-#define TOP_DARJEELING_ALERT_HANDLER_BASE_ADDR 0x30150000u
+#define TOP_DARJEELING_ALERT_HANDLER_BASE_ADDR 0x30160000u
 
 /**
  * Peripheral size for alert_handler in top darjeeling.
@@ -936,7 +936,7 @@ extern "C" {
  * This should be used with #mmio_region_from_addr to access the memory-mapped
  * registers associated with the peripheral (usually via a DIF).
  */
-#define TOP_DARJEELING_SOC_DBG_CTRL_CORE_BASE_ADDR 0x30160000u
+#define TOP_DARJEELING_SOC_DBG_CTRL_CORE_BASE_ADDR 0x30170000u
 
 /**
  * Peripheral size for core device on soc_dbg_ctrl in top darjeeling.
@@ -1265,51 +1265,52 @@ typedef enum top_darjeeling_plic_target {
  * alert.
  */
 typedef enum top_darjeeling_alert_peripheral {
-  kTopDarjeelingAlertPeripheralUart0 = 0, /**< uart0 */
-  kTopDarjeelingAlertPeripheralGpio = 1, /**< gpio */
-  kTopDarjeelingAlertPeripheralSpiDevice = 2, /**< spi_device */
-  kTopDarjeelingAlertPeripheralI2c0 = 3, /**< i2c0 */
-  kTopDarjeelingAlertPeripheralRvTimer = 4, /**< rv_timer */
-  kTopDarjeelingAlertPeripheralOtpCtrl = 5, /**< otp_ctrl */
-  kTopDarjeelingAlertPeripheralLcCtrl = 6, /**< lc_ctrl */
-  kTopDarjeelingAlertPeripheralSpiHost0 = 7, /**< spi_host0 */
-  kTopDarjeelingAlertPeripheralPwrmgrAon = 8, /**< pwrmgr_aon */
-  kTopDarjeelingAlertPeripheralRstmgrAon = 9, /**< rstmgr_aon */
-  kTopDarjeelingAlertPeripheralClkmgrAon = 10, /**< clkmgr_aon */
-  kTopDarjeelingAlertPeripheralPinmuxAon = 11, /**< pinmux_aon */
-  kTopDarjeelingAlertPeripheralAonTimerAon = 12, /**< aon_timer_aon */
-  kTopDarjeelingAlertPeripheralSocProxy = 13, /**< soc_proxy */
-  kTopDarjeelingAlertPeripheralSramCtrlRetAon = 14, /**< sram_ctrl_ret_aon */
-  kTopDarjeelingAlertPeripheralRvDm = 15, /**< rv_dm */
-  kTopDarjeelingAlertPeripheralRvPlic = 16, /**< rv_plic */
-  kTopDarjeelingAlertPeripheralAes = 17, /**< aes */
-  kTopDarjeelingAlertPeripheralHmac = 18, /**< hmac */
-  kTopDarjeelingAlertPeripheralKmac = 19, /**< kmac */
-  kTopDarjeelingAlertPeripheralOtbn = 20, /**< otbn */
-  kTopDarjeelingAlertPeripheralKeymgrDpe = 21, /**< keymgr_dpe */
-  kTopDarjeelingAlertPeripheralCsrng = 22, /**< csrng */
-  kTopDarjeelingAlertPeripheralEdn0 = 23, /**< edn0 */
-  kTopDarjeelingAlertPeripheralEdn1 = 24, /**< edn1 */
-  kTopDarjeelingAlertPeripheralSramCtrlMain = 25, /**< sram_ctrl_main */
-  kTopDarjeelingAlertPeripheralSramCtrlMbox = 26, /**< sram_ctrl_mbox */
-  kTopDarjeelingAlertPeripheralRomCtrl0 = 27, /**< rom_ctrl0 */
-  kTopDarjeelingAlertPeripheralRomCtrl1 = 28, /**< rom_ctrl1 */
-  kTopDarjeelingAlertPeripheralDma = 29, /**< dma */
-  kTopDarjeelingAlertPeripheralMbx0 = 30, /**< mbx0 */
-  kTopDarjeelingAlertPeripheralMbx1 = 31, /**< mbx1 */
-  kTopDarjeelingAlertPeripheralMbx2 = 32, /**< mbx2 */
-  kTopDarjeelingAlertPeripheralMbx3 = 33, /**< mbx3 */
-  kTopDarjeelingAlertPeripheralMbx4 = 34, /**< mbx4 */
-  kTopDarjeelingAlertPeripheralMbx5 = 35, /**< mbx5 */
-  kTopDarjeelingAlertPeripheralMbx6 = 36, /**< mbx6 */
-  kTopDarjeelingAlertPeripheralMbxJtag = 37, /**< mbx_jtag */
-  kTopDarjeelingAlertPeripheralMbxPcie0 = 38, /**< mbx_pcie0 */
-  kTopDarjeelingAlertPeripheralMbxPcie1 = 39, /**< mbx_pcie1 */
-  kTopDarjeelingAlertPeripheralSocDbgCtrl = 40, /**< soc_dbg_ctrl */
-  kTopDarjeelingAlertPeripheralRaclCtrl = 41, /**< racl_ctrl */
-  kTopDarjeelingAlertPeripheralAcRangeCheck = 42, /**< ac_range_check */
-  kTopDarjeelingAlertPeripheralRvCoreIbex = 43, /**< rv_core_ibex */
-  kTopDarjeelingAlertPeripheralLast = 43, /**< \internal Final Alert peripheral */
+  kTopDarjeelingAlertPeripheralExternal = 0, /**< External Peripheral */
+  kTopDarjeelingAlertPeripheralUart0 = 1, /**< uart0 */
+  kTopDarjeelingAlertPeripheralGpio = 2, /**< gpio */
+  kTopDarjeelingAlertPeripheralSpiDevice = 3, /**< spi_device */
+  kTopDarjeelingAlertPeripheralI2c0 = 4, /**< i2c0 */
+  kTopDarjeelingAlertPeripheralRvTimer = 5, /**< rv_timer */
+  kTopDarjeelingAlertPeripheralOtpCtrl = 6, /**< otp_ctrl */
+  kTopDarjeelingAlertPeripheralLcCtrl = 7, /**< lc_ctrl */
+  kTopDarjeelingAlertPeripheralSpiHost0 = 8, /**< spi_host0 */
+  kTopDarjeelingAlertPeripheralPwrmgrAon = 9, /**< pwrmgr_aon */
+  kTopDarjeelingAlertPeripheralRstmgrAon = 10, /**< rstmgr_aon */
+  kTopDarjeelingAlertPeripheralClkmgrAon = 11, /**< clkmgr_aon */
+  kTopDarjeelingAlertPeripheralPinmuxAon = 12, /**< pinmux_aon */
+  kTopDarjeelingAlertPeripheralAonTimerAon = 13, /**< aon_timer_aon */
+  kTopDarjeelingAlertPeripheralSocProxy = 14, /**< soc_proxy */
+  kTopDarjeelingAlertPeripheralSramCtrlRetAon = 15, /**< sram_ctrl_ret_aon */
+  kTopDarjeelingAlertPeripheralRvDm = 16, /**< rv_dm */
+  kTopDarjeelingAlertPeripheralRvPlic = 17, /**< rv_plic */
+  kTopDarjeelingAlertPeripheralAes = 18, /**< aes */
+  kTopDarjeelingAlertPeripheralHmac = 19, /**< hmac */
+  kTopDarjeelingAlertPeripheralKmac = 20, /**< kmac */
+  kTopDarjeelingAlertPeripheralOtbn = 21, /**< otbn */
+  kTopDarjeelingAlertPeripheralKeymgrDpe = 22, /**< keymgr_dpe */
+  kTopDarjeelingAlertPeripheralCsrng = 23, /**< csrng */
+  kTopDarjeelingAlertPeripheralEdn0 = 24, /**< edn0 */
+  kTopDarjeelingAlertPeripheralEdn1 = 25, /**< edn1 */
+  kTopDarjeelingAlertPeripheralSramCtrlMain = 26, /**< sram_ctrl_main */
+  kTopDarjeelingAlertPeripheralSramCtrlMbox = 27, /**< sram_ctrl_mbox */
+  kTopDarjeelingAlertPeripheralRomCtrl0 = 28, /**< rom_ctrl0 */
+  kTopDarjeelingAlertPeripheralRomCtrl1 = 29, /**< rom_ctrl1 */
+  kTopDarjeelingAlertPeripheralDma = 30, /**< dma */
+  kTopDarjeelingAlertPeripheralMbx0 = 31, /**< mbx0 */
+  kTopDarjeelingAlertPeripheralMbx1 = 32, /**< mbx1 */
+  kTopDarjeelingAlertPeripheralMbx2 = 33, /**< mbx2 */
+  kTopDarjeelingAlertPeripheralMbx3 = 34, /**< mbx3 */
+  kTopDarjeelingAlertPeripheralMbx4 = 35, /**< mbx4 */
+  kTopDarjeelingAlertPeripheralMbx5 = 36, /**< mbx5 */
+  kTopDarjeelingAlertPeripheralMbx6 = 37, /**< mbx6 */
+  kTopDarjeelingAlertPeripheralMbxJtag = 38, /**< mbx_jtag */
+  kTopDarjeelingAlertPeripheralMbxPcie0 = 39, /**< mbx_pcie0 */
+  kTopDarjeelingAlertPeripheralMbxPcie1 = 40, /**< mbx_pcie1 */
+  kTopDarjeelingAlertPeripheralSocDbgCtrl = 41, /**< soc_dbg_ctrl */
+  kTopDarjeelingAlertPeripheralRaclCtrl = 42, /**< racl_ctrl */
+  kTopDarjeelingAlertPeripheralAcRangeCheck = 43, /**< ac_range_check */
+  kTopDarjeelingAlertPeripheralRvCoreIbex = 44, /**< rv_core_ibex */
+  kTopDarjeelingAlertPeripheralLast = 44, /**< \internal Final Alert peripheral */
 } top_darjeeling_alert_peripheral_t;
 
 /**
@@ -1414,8 +1415,8 @@ typedef enum top_darjeeling_alert_id {
   kTopDarjeelingAlertIdMbxPcie1RecovFault = 92, /**< mbx_pcie1_recov_fault */
   kTopDarjeelingAlertIdSocDbgCtrlFatalFault = 93, /**< soc_dbg_ctrl_fatal_fault */
   kTopDarjeelingAlertIdSocDbgCtrlRecovCtrlUpdateErr = 94, /**< soc_dbg_ctrl_recov_ctrl_update_err */
-  kTopDarjeelingAlertIdRaclCtrlRecovCtrlUpdateErr = 95, /**< racl_ctrl_recov_ctrl_update_err */
-  kTopDarjeelingAlertIdRaclCtrlFatalFault = 96, /**< racl_ctrl_fatal_fault */
+  kTopDarjeelingAlertIdRaclCtrlFatalFault = 95, /**< racl_ctrl_fatal_fault */
+  kTopDarjeelingAlertIdRaclCtrlRecovCtrlUpdateErr = 96, /**< racl_ctrl_recov_ctrl_update_err */
   kTopDarjeelingAlertIdAcRangeCheckRecovCtrlUpdateErr = 97, /**< ac_range_check_recov_ctrl_update_err */
   kTopDarjeelingAlertIdAcRangeCheckFatalFault = 98, /**< ac_range_check_fatal_fault */
   kTopDarjeelingAlertIdRvCoreIbexFatalSwErr = 99, /**< rv_core_ibex_fatal_sw_err */

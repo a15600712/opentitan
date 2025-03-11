@@ -10,6 +10,7 @@ use std::io::{Read, Write};
 
 use super::flash::FlashFlags;
 use super::misc::{TlvHeader, TlvTag};
+use super::GlobalFlags;
 
 /// Describes an INFO page to which a set of flags apply.
 #[derive(Debug, Default, Deserialize, Serialize, Annotate)]
@@ -59,7 +60,10 @@ impl OwnerInfoPage {
 #[derive(Debug, Serialize, Deserialize, Annotate)]
 pub struct OwnerFlashInfoConfig {
     /// Header identifying this struct.
-    #[serde(default)]
+    #[serde(
+        skip_serializing_if = "GlobalFlags::not_debug",
+        default = "OwnerFlashInfoConfig::default_header"
+    )]
     pub header: TlvHeader,
     /// A list of info page configurations.
     pub config: Vec<OwnerInfoPage>,
@@ -68,7 +72,7 @@ pub struct OwnerFlashInfoConfig {
 impl Default for OwnerFlashInfoConfig {
     fn default() -> Self {
         Self {
-            header: TlvHeader::new(TlvTag::FlashInfoConfig, 0),
+            header: Self::default_header(),
             config: Vec::new(),
         }
     }
@@ -77,9 +81,13 @@ impl Default for OwnerFlashInfoConfig {
 impl OwnerFlashInfoConfig {
     const BASE_SIZE: usize = 8;
 
+    pub fn default_header() -> TlvHeader {
+        TlvHeader::new(TlvTag::FlashInfoConfig, 0, "0.0")
+    }
+
     pub fn basic() -> Self {
         Self {
-            header: TlvHeader::new(TlvTag::FlashInfoConfig, 0),
+            header: TlvHeader::new(TlvTag::FlashInfoConfig, 0, "0.0"),
             config: vec![
                 OwnerInfoPage::new(0, 6, FlashFlags::info_page()),
                 OwnerInfoPage::new(0, 7, FlashFlags::info_page()),
@@ -102,6 +110,7 @@ impl OwnerFlashInfoConfig {
         let header = TlvHeader::new(
             TlvTag::FlashInfoConfig,
             Self::BASE_SIZE + self.config.len() * OwnerInfoPage::SIZE,
+            "0.0",
         );
         header.write(dest)?;
         for (i, config) in self.config.iter().enumerate() {
@@ -125,10 +134,6 @@ r#"00000000: 49 4e 46 4f 2c 00 00 00 00 00 00 00 96 09 00 99  INFO,...........
 "#;
 
     const OWNER_FLASH_INFO_CONFIG_JSON: &str = r#"{
-  header: {
-    identifier: "FlashInfoConfig",
-    length: 44
-  },
   config: [
     {
       bank: 0,
