@@ -10,6 +10,7 @@ use std::convert::TryFrom;
 use std::io::{Read, Write};
 
 use super::misc::{KeyMaterial, OwnershipKeyAlg, TlvHeader, TlvTag};
+use super::GlobalFlags;
 use super::{OwnerApplicationKey, OwnerFlashConfig, OwnerFlashInfoConfig, OwnerRescueConfig};
 use crate::crypto::ecdsa::{EcdsaPrivateKey, EcdsaRawSignature};
 use crate::with_unknown;
@@ -24,29 +25,38 @@ with_unknown! {
     pub enum MinSecurityVersion: u32 [default = Self::NoChange] {
         NoChange = 0xFFFFFFFFu32,
     }
+
+    pub enum OwnershipUpdateMode: u32 [default = Self::Open] {
+        Open = u32::from_le_bytes(*b"OPEN"),
+        UnlockSelf = u32::from_le_bytes(*b"SELF"),
+        NewVersion = u32::from_le_bytes(*b"NEWV"),
+    }
 }
 
 /// Describes the owner configuration and key material.
 #[derive(Debug, Serialize, Deserialize, Annotate)]
 pub struct OwnerBlock {
     /// Header identifying this struct.
-    #[serde(default)]
+    #[serde(
+        skip_serializing_if = "GlobalFlags::not_debug",
+        default = "OwnerBlock::default_header"
+    )]
     pub header: TlvHeader,
-    /// Version of this structure (ie: currently, zero).
+    /// Configuraion version (monotonically increasing per owner).
     #[serde(default)]
-    pub struct_version: u32,
+    pub config_version: u32,
     /// Whether the owner wants to permit code execution in SRAM.
     #[serde(default)]
     pub sram_exec: SramExecMode,
     /// The key algorithm of the ownership keys.
     pub ownership_key_alg: OwnershipKeyAlg,
-    /// Configuraion version (monotonically increasing per owner).
+    /// Ownership update mode.
     #[serde(default)]
-    pub config_version: u32,
+    pub update_mode: OwnershipUpdateMode,
     /// Set the minimum security version to this value.
     #[serde(default)]
     pub min_security_version_bl0: MinSecurityVersion,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "GlobalFlags::not_debug")]
     #[annotate(format=hex)]
     pub reserved: [u32; 25],
     /// The owner identity key.
@@ -71,11 +81,11 @@ pub struct OwnerBlock {
 impl Default for OwnerBlock {
     fn default() -> Self {
         Self {
-            header: TlvHeader::new(TlvTag::Owner, 0),
-            struct_version: 0,
+            header: Self::default_header(),
+            config_version: 0,
             sram_exec: SramExecMode::default(),
             ownership_key_alg: OwnershipKeyAlg::default(),
-            config_version: 0,
+            update_mode: OwnershipUpdateMode::default(),
             min_security_version_bl0: MinSecurityVersion::default(),
             reserved: [0u32; 25],
             owner_key: KeyMaterial::default(),
@@ -83,7 +93,7 @@ impl Default for OwnerBlock {
             unlock_key: KeyMaterial::default(),
             data: Vec::new(),
             signature: EcdsaRawSignature::default(),
-            seal: vec![0xffu8; 32],
+            seal: Vec::new(),
         }
     }
 }
@@ -95,6 +105,9 @@ impl OwnerBlock {
     // The not present value must be reflected in the TlvTag::NotPresent value.
     const NOT_PRESENT: u8 = 0x5a;
 
+    pub fn default_header() -> TlvHeader {
+        TlvHeader::new(TlvTag::Owner, 0, "0.0")
+    }
     pub fn basic() -> Self {
         Self {
             data: vec![
@@ -108,12 +121,12 @@ impl OwnerBlock {
     }
 
     pub fn write(&self, dest: &mut impl Write) -> Result<()> {
-        let header = TlvHeader::new(TlvTag::Owner, Self::SIZE);
+        let header = TlvHeader::new(TlvTag::Owner, Self::SIZE, "0.0");
         header.write(dest)?;
-        dest.write_u32::<LittleEndian>(self.struct_version)?;
+        dest.write_u32::<LittleEndian>(self.config_version)?;
         dest.write_u32::<LittleEndian>(u32::from(self.sram_exec))?;
         dest.write_u32::<LittleEndian>(u32::from(self.ownership_key_alg))?;
-        dest.write_u32::<LittleEndian>(self.config_version)?;
+        dest.write_u32::<LittleEndian>(u32::from(self.update_mode))?;
         dest.write_u32::<LittleEndian>(u32::from(self.min_security_version_bl0))?;
         for x in &self.reserved {
             dest.write_u32::<LittleEndian>(*x)?;
@@ -128,15 +141,19 @@ impl OwnerBlock {
         data.resize(Self::DATA_SIZE, Self::NOT_PRESENT);
         dest.write_all(&data)?;
         self.signature.write(dest)?;
-        dest.write_all(&self.seal)?;
+        if self.seal.is_empty() {
+            dest.write_all(&[0u8; 32])?;
+        } else {
+            dest.write_all(&self.seal)?;
+        }
         Ok(())
     }
 
     pub fn read(src: &mut impl Read, header: TlvHeader) -> Result<Self> {
-        let struct_version = src.read_u32::<LittleEndian>()?;
+        let config_version = src.read_u32::<LittleEndian>()?;
         let sram_exec = SramExecMode(src.read_u32::<LittleEndian>()?);
         let ownership_key_alg = OwnershipKeyAlg(src.read_u32::<LittleEndian>()?);
-        let config_version = src.read_u32::<LittleEndian>()?;
+        let update_mode = OwnershipUpdateMode(src.read_u32::<LittleEndian>()?);
         let min_security_version_bl0 = MinSecurityVersion(src.read_u32::<LittleEndian>()?);
         let mut reserved = [0u32; 25];
         src.read_u32_into::<LittleEndian>(&mut reserved)?;
@@ -158,10 +175,10 @@ impl OwnerBlock {
         src.read_exact(&mut seal)?;
         Ok(Self {
             header,
-            struct_version,
+            config_version,
             sram_exec,
             ownership_key_alg,
-            config_version,
+            update_mode,
             min_security_version_bl0,
             reserved,
             owner_key,
@@ -182,10 +199,15 @@ impl OwnerBlock {
 
 #[derive(Debug, Serialize, Deserialize, Annotate)]
 pub enum OwnerConfigItem {
+    #[serde(alias = "application_key")]
     ApplicationKey(OwnerApplicationKey),
+    #[serde(alias = "flash_info_config")]
     FlashInfoConfig(OwnerFlashInfoConfig),
+    #[serde(alias = "flash_config")]
     FlashConfig(OwnerFlashConfig),
+    #[serde(alias = "rescue_config")]
     RescueConfig(OwnerRescueConfig),
+    #[serde(alias = "raw")]
     Raw(
         #[serde(with = "serde_bytes")]
         #[annotate(format = hexdump)]
@@ -245,7 +267,7 @@ mod test {
     #[rustfmt::skip]
     const OWNER_BIN: &str =
 r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
-00000010: 50 32 35 36 00 00 00 00 ff ff ff ff 00 00 00 00  P256............
+00000010: 50 32 35 36 4f 50 45 4e ff ff ff ff 00 00 00 00  P256OPEN........
 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
@@ -375,42 +397,11 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
 "#;
 
     const OWNER_JSON: &str = r#"{
-  header: {
-    identifier: "Owner",
-    length: 2048
-  },
-  struct_version: 0,
+  config_version: 0,
   sram_exec: "DisabledLocked",
   ownership_key_alg: "EcdsaP256",
-  config_version: 0,
+  update_mode: "Open",
   min_security_version_bl0: "NoChange",
-  reserved: [
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0
-  ],
   owner_key: {
     Ecdsa: {
       x: "1111111111111111111111111111111111111111111111111111111111111111",
@@ -432,10 +423,6 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
   data: [
     {
       ApplicationKey: {
-        header: {
-          identifier: "ApplicationKey",
-          length: 112
-        },
         key_alg: "EcdsaP256",
         key_domain: "Prod",
         key_diversifier: [
@@ -458,10 +445,6 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
     },
     {
       FlashConfig: {
-        header: {
-          identifier: "FlashConfig",
-          length: 32
-        },
         config: [
           {
             start: 0,
@@ -492,10 +475,6 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
     },
     {
       FlashInfoConfig: {
-        header: {
-          identifier: "FlashInfoConfig",
-          length: 32
-        },
         config: [
           {
             bank: 0,
@@ -528,10 +507,6 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
     },
     {
       RescueConfig: {
-        header: {
-          identifier: "Rescue",
-          length: 80
-        },
         rescue_type: "Xmodem",
         start: 32,
         size: 224,
@@ -566,7 +541,7 @@ r#"00000000: 4f 57 4e 52 00 08 00 00 00 00 00 00 4c 4e 45 58  OWNR........LNEX
     #[test]
     fn test_owner_write() -> Result<()> {
         let own = OwnerBlock {
-            struct_version: 0,
+            config_version: 0,
             sram_exec: SramExecMode::default(),
             ownership_key_alg: OwnershipKeyAlg::EcdsaP256,
             owner_key: KeyMaterial::Ecdsa(EcdsaRawPublicKey {

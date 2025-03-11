@@ -9,6 +9,7 @@ use serde_annotate::Annotate;
 use std::io::{Read, Write};
 
 use super::misc::{TlvHeader, TlvTag};
+use super::GlobalFlags;
 use crate::chip::boolean::MultiBitBool4;
 
 /// Describes the proprerties of a flash region.
@@ -178,7 +179,10 @@ impl OwnerFlashRegion {
 #[derive(Debug, Serialize, Deserialize, Annotate)]
 pub struct OwnerFlashConfig {
     /// Header identifying this struct.
-    #[serde(default)]
+    #[serde(
+        skip_serializing_if = "GlobalFlags::not_debug",
+        default = "OwnerFlashConfig::default_header"
+    )]
     pub header: TlvHeader,
     /// A list of flash region configurations.
     pub config: Vec<OwnerFlashRegion>,
@@ -187,7 +191,7 @@ pub struct OwnerFlashConfig {
 impl Default for OwnerFlashConfig {
     fn default() -> Self {
         Self {
-            header: TlvHeader::new(TlvTag::FlashConfig, 0),
+            header: Self::default_header(),
             config: Vec::new(),
         }
     }
@@ -195,9 +199,13 @@ impl Default for OwnerFlashConfig {
 
 impl OwnerFlashConfig {
     const BASE_SIZE: usize = 8;
+
+    pub fn default_header() -> TlvHeader {
+        TlvHeader::new(TlvTag::FlashConfig, 0, "0.0")
+    }
     pub fn basic() -> Self {
         Self {
-            header: TlvHeader::new(TlvTag::FlashConfig, 0),
+            header: TlvHeader::new(TlvTag::FlashConfig, 0, "0.0"),
             config: vec![
                 OwnerFlashRegion::new(0, 32, FlashFlags::rom_ext()),
                 OwnerFlashRegion::new(32, 192, FlashFlags::firmware()),
@@ -221,6 +229,7 @@ impl OwnerFlashConfig {
         let header = TlvHeader::new(
             TlvTag::FlashConfig,
             Self::BASE_SIZE + self.config.len() * OwnerFlashRegion::SIZE,
+            "0.0",
         );
         header.write(dest)?;
         for (i, config) in self.config.iter().enumerate() {
@@ -244,10 +253,6 @@ r#"00000000: 46 4c 53 48 2c 00 00 00 00 00 00 00 96 09 00 99  FLSH,...........
 "#;
 
     const OWNER_FLASH_CONFIG_JSON: &str = r#"{
-  header: {
-    identifier: "FlashConfig",
-    length: 44
-  },
   config: [
     {
       start: 0,

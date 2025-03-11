@@ -24,7 +24,8 @@ load(
 )
 load(
     "//sw/device/silicon_creator/imm_rom_ext:defs.bzl",
-    "SLOT_VIRTUAL_IMM_ROM_EXT_SECTIONS",
+    "IMMUTABLE_HASH_UNENFORCED_MSG",
+    "IMM_ROM_EXT_VARIATIONS",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -49,7 +50,7 @@ filegroup(
         rom_ext = "//sw/device/silicon_creator/rom_ext:rom_ext_with_{}_imm_slot_virtual".format(name),
         visibility = ["//visibility:private"],
     )
-    for name in SLOT_VIRTUAL_IMM_ROM_EXT_SECTIONS
+    for name in IMM_ROM_EXT_VARIATIONS
 ]
 
 [
@@ -63,7 +64,7 @@ filegroup(
         ],
         visibility = ["//visibility:private"],
     )
-    for name in SLOT_VIRTUAL_IMM_ROM_EXT_SECTIONS
+    for name in IMM_ROM_EXT_VARIATIONS
 ]
 
 _POSITIONS = {
@@ -138,9 +139,10 @@ _POSITIONS = {
         "linker_script": "//sw/device/lib/testing/test_framework:ottf_ld_silicon_owner_slot_a",
         "owner_offset": "0x10000",
         "success": "rom_ext_slot = AA__\r\n",
+        "failure": IMMUTABLE_HASH_UNENFORCED_MSG,
         "otp_img": ":otp_img_with_{}_imm_romext_enabled".format(name),
     }
-    for name in SLOT_VIRTUAL_IMM_ROM_EXT_SECTIONS
+    for name in IMM_ROM_EXT_VARIATIONS
 }
 
 [
@@ -156,6 +158,7 @@ _POSITIONS = {
             binaries = {
                 position["romext"]: "romext",
             },
+            exit_failure = position.get("failure", DEFAULT_TEST_FAILURE_MSG),
             exit_success = position["success"],
             otp = position["otp_img"],
             owner_offset = position["owner_offset"],
