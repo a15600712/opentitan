@@ -8,52 +8,48 @@
         // EK certificate public key: this is an EC point on
         // the prime256v1 curve so it has two components
         // (x and y) which are 32-bytes integers.
-        // Also, 32-byte unsigned integers may be encoded to
-        // 33-byte in ASN.1.
         tpm_ek_pub_key_ec_x: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         tpm_ek_pub_key_ec_y: {
             type: "integer",
-            exact-size: 32,
+            size: 32,
         },
         // Intermediate CA public key ID: this is a 20-byte hash
         // derived from the creator public key.
         tpm_ek_pub_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         // Authority key ID: this is the identifier of
         // the key that will be used to sign this certificate
         // offline.
         auth_key_key_id: {
             type: "byte-array",
-            exact-size: 20,
-            tweak-msb: true,
+            size: 20,
         },
         // Certificate signature: the result of signing with ECDSA
         // are two integers named "r" and "s"
         cert_signature_r: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
         cert_signature_s: {
             type: "integer",
-            range-size: [24, 32],
+            size: 32,
         },
         tpm_vendor: {
             type: "string",
-            range-size: [0, 19],
+            size: 100,
         },
         tpm_model: {
             type: "string",
-            range-size: [0, 19],
+            size: 100,
         },
         tpm_version: {
             type: "string",
-            range-size: [0, 19],
+            size: 100,
         },
     },
 
