@@ -17,7 +17,6 @@ py_library(
     ],
     deps = [
         ":merge",
-        ":typing",
         requirement("tabulate"),
         requirement("pycryptodome"),
     ],
@@ -28,14 +27,6 @@ py_library(
     srcs = ["c_test.py"],
     deps = [
         ":lib",
-    ],
-)
-
-py_library(
-    name = "typing",
-    srcs = ["typing.py"],
-    deps = [
-        "//util/reggen:ip_block",
     ],
 )
 

@@ -4,6 +4,7 @@
 
 #include "sw/device/lib/base/macros.h"
 #include "sw/device/lib/crypto/drivers/entropy.h"
+#include "sw/device/lib/crypto/include/aes.h"
 #include "sw/device/lib/crypto/include/key_transport.h"
 #include "sw/device/lib/runtime/log.h"
 #include "sw/device/lib/testing/test_framework/check.h"
@@ -30,7 +31,7 @@ static const otcrypto_key_config_t kWrappingKeyConfig = {
 static status_t run_wrap_unwrap(const otcrypto_blinded_key_t *key_to_wrap,
                                 const otcrypto_blinded_key_t *key_kek) {
   size_t wrapped_num_words;
-  TRY(otcrypto_wrapped_key_len(key_to_wrap->config, &wrapped_num_words));
+  TRY(otcrypto_aes_kwp_wrapped_len(key_to_wrap->config, &wrapped_num_words));
 
   // Wrap the key.
   uint32_t wrapped_key_data[wrapped_num_words];
@@ -38,7 +39,7 @@ static status_t run_wrap_unwrap(const otcrypto_blinded_key_t *key_to_wrap,
       .data = wrapped_key_data,
       .len = ARRAYSIZE(wrapped_key_data),
   };
-  TRY(otcrypto_key_wrap(key_to_wrap, key_kek, wrapped_key));
+  TRY(otcrypto_aes_kwp_wrap(key_to_wrap, key_kek, wrapped_key));
 
   // Unwrap the key.
   hardened_bool_t success;
@@ -49,7 +50,7 @@ static status_t run_wrap_unwrap(const otcrypto_blinded_key_t *key_to_wrap,
       .keyblob_length = keyblob_words * sizeof(uint32_t),
       .keyblob = unwrapped_key_keyblob,
   };
-  TRY(otcrypto_key_unwrap(
+  TRY(otcrypto_aes_kwp_unwrap(
       (otcrypto_const_word32_buf_t){
           .data = wrapped_key_data,
           .len = ARRAYSIZE(wrapped_key_data),

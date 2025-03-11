@@ -61,19 +61,6 @@ typedef enum ownership_key_alg {
   kOwnershipKeyAlgSpxq20 = 0x30327153,
 } ownership_key_alg_t;
 
-typedef enum ownership_update_mode {
-  /** Update mode open: `OPEN` (unlock key has full power) */
-  kOwnershipUpdateModeOpen = 0x4e45504f,
-  /** Update mode self: `SELF` (unlock key only unlocks to UnlockedSelf) */
-  kOwnershipUpdateModeSelf = 0x464c4553,
-  /**
-   * Update mode NewVersion: `NEWV`
-   * (unlock key can't unlock; accept new owner configs from self-same owner
-   * if the config_version is newer)
-   */
-  kOwnershipUpdateModeNewVersion = 0x5657454e,
-} ownership_update_mode_t;
-
 typedef enum tlv_tag {
   /** Owner struct: `OWNR`. */
   kTlvTagOwner = 0x524e574f,
@@ -89,15 +76,9 @@ typedef enum tlv_tag {
   kTlvTagNotPresent = 0x5a5a5a5a,
 } tlv_tag_t;
 
-typedef struct struct_version {
-  uint8_t major;
-  uint8_t minor;
-} struct_version_t;
-
 typedef struct tlv_header {
   uint32_t tag;
-  uint16_t length;
-  struct_version_t version;
+  uint32_t length;
 } tlv_header_t;
 
 typedef enum owner_sram_exec_mode {
@@ -117,17 +98,16 @@ typedef struct owner_block {
    * Header identifying this struct.
    * tag: `OWNR`.
    * length: 2048.
-   * version: 0
    */
   tlv_header_t header;
-  /** Configuraion version (monotonically increasing per owner) */
-  uint32_t config_version;
+  /** Version of the owner struct.  Currently `0`. */
+  uint32_t struct_version;
   /** SRAM execution configuration (DisabledLocked, Disabled, Enabled). */
   uint32_t sram_exec_mode;
   /** Ownership key algorithm (currently, only ECDSA is supported). */
   uint32_t ownership_key_alg;
-  /** Ownership update mode (one of OPEN, SELF, NEWV) */
-  uint32_t update_mode;
+  /** Configuraion version (monotonically increasing per owner) */
+  uint32_t config_version;
   /** Set the minimum security version to this value (UINT32_MAX: no change) */
   uint32_t min_security_version_bl0;
   /** Reserved space for future use. */
@@ -147,10 +127,10 @@ typedef struct owner_block {
 } owner_block_t;
 
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, header, 0);
-OT_ASSERT_MEMBER_OFFSET(owner_block_t, config_version, 8);
+OT_ASSERT_MEMBER_OFFSET(owner_block_t, struct_version, 8);
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, sram_exec_mode, 12);
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, ownership_key_alg, 16);
-OT_ASSERT_MEMBER_OFFSET(owner_block_t, update_mode, 20);
+OT_ASSERT_MEMBER_OFFSET(owner_block_t, config_version, 20);
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, min_security_version_bl0, 24);
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, reserved, 28);
 OT_ASSERT_MEMBER_OFFSET(owner_block_t, owner_key, 128);
@@ -324,7 +304,7 @@ OT_ASSERT_SIZE(owner_flash_info_config_t, 8);
 typedef struct owner_rescue_config {
   /**
    * Header identifiying this struct.
-   * tag: `RESQ`.
+   * tag: `RSCU`.
    * length: 16 + sizeof(command_allow).
    */
   tlv_header_t header;

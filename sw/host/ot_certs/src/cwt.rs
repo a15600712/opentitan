@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashMap;
 use std::fs;
 use std::iter;
 use std::path::PathBuf;
@@ -106,7 +107,7 @@ struct CodegenVar {
     value: CodegenVarValue,
 }
 
-type CodegenVarTable = IndexMap<String, CodegenVar>;
+type CodegenVarTable = HashMap<String, CodegenVar>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 enum CodegenVarValue {
@@ -232,7 +233,7 @@ impl CodegenStructure<'_> {
         vars: &'a CodegenVarTable,
     ) -> Result<Vec<CodegenStructure<'a>>> {
         let mut nodes = Vec::<CodegenStructure>::new();
-        let mut id_mapping = IndexMap::<String, usize>::new();
+        let mut id_mapping = HashMap::<String, usize>::new();
         Self::build_codegen_structure(&template.structure, vars, &mut nodes, &mut id_mapping)
             .context("build_codegen_structure failed")?;
         Ok(nodes)
@@ -245,7 +246,7 @@ impl CodegenStructure<'_> {
         cur: &TemplateStructure,
         vars: &'a CodegenVarTable,
         nodes: &mut Vec<CodegenStructure<'a>>,
-        var_ids: &mut IndexMap<String, usize>,
+        var_ids: &mut HashMap<String, usize>,
     ) -> Result<usize> {
         let node = match cur {
             TemplateStructure::Item(name) => {
@@ -540,7 +541,7 @@ fn derive_size_expressions<'a>(
 }
 
 fn collect_codegenvar(template: &CwtTemplate) -> Result<CodegenVarTable> {
-    let mut vars = IndexMap::<String, CodegenVar>::new();
+    let mut vars = HashMap::<String, CodegenVar>::new();
 
     for (name, var) in &template.variables {
         let ret = vars.insert(name.clone(), CodegenVar::from_template_variable(name, var)?);
@@ -682,7 +683,7 @@ fn generate_cbor_instructions(
 
     let call_wrapper = |func_call: String| {
         indoc::formatdoc! { r#"
-            {prefix}{func_call};
+            {prefix}RETURN_IF_ERROR({func_call});
             "#
         }
     };
@@ -868,11 +869,11 @@ fn generate_source(
         rom_error_t {template_name}_build({template_name}_values_t *values, uint8_t *buffer, size_t *inout_size) {{
         {size_computations}
         {input_size_checks}
-          cbor_out_t cbor;
-          cbor_out_init(&cbor, buffer);
+          struct CborOut cbor;
+          RETURN_IF_ERROR(cbor_write_out_init(&cbor, buffer, *inout_size));
 
         {cbor_instructions}
-          *inout_size = cbor_out_size(&cbor);
+          *inout_size = CborOutSize(&cbor);
         {output_size_checks}
           return kErrorOk;
         }}

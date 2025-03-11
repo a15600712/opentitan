@@ -1652,7 +1652,7 @@
       { multireg: {
           cname: "ECC_SINGLE_ERR",
           name: "ECC_SINGLE_ERR_CNT",
-          desc: "Count of single bit ECC errors",
+          desc: "Total number of single bit ECC error count",
           count: "RegNumBanks",
           swaccess: "rw",
           hwaccess: "hrw",

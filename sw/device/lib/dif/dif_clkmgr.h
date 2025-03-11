@@ -67,10 +67,6 @@ typedef enum dif_clkmgr_measure_clock {
    * The Usb clock.
    */
   kDifClkmgrMeasureClockUsb,
-  /**
-   * Total number of clock measurements.
-   */
-  kDifClkmgrMeasureClockCount,
 } dif_clkmgr_measure_clock_t;
 
 typedef enum dif_clkmgr_recov_err_type {

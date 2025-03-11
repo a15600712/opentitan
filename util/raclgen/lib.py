@@ -51,7 +51,6 @@ range_required = {
 # Default configuration to render the RACL package for systems that don't use RACL but need the
 # type definitions
 DEFAULT_RACL_CONFIG = {
-    'error_response': False,
     'role_bit_lsb': 0,
     'role_bit_msb': 0,
     'ctn_uid_bit_lsb': 0,
@@ -74,6 +73,17 @@ def _read_hjson(filename: str) -> Dict[str, object]:
         raise SystemExit(sys.exc_info()[1])
     except OSError:
         raise SystemExit(sys.exc_info()[1])
+
+
+def format_parameter_name_prefix(
+        module_name: str, racl_group: str = None, if_name: str = None) -> str:
+    group_suffix = f"_{racl_group.upper()}" if racl_group and racl_group != "Null" else ""
+    if_suffix = f"_{if_name.upper()}" if if_name else ""
+    return f"RACL_POLICY_SEL_{module_name.upper()}{group_suffix}{if_suffix}"
+
+
+def format_parameter_range_value(range: Dict) -> str:
+    return f"'{{base:'h{range['base']:x},mask:'h{range['mask']:x},policy:{range['policy']}}}"
 
 
 def parse_racl_config(config_path: str) -> Dict[str, object]:

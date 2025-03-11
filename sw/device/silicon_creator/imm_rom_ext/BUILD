@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 
+load("@lowrisc_opentitan//rules/opentitan:exec_env.bzl", "ExecEnvInfo")
 load("@lowrisc_opentitan//rules/opentitan:transform.bzl", "obj_transform")
 load("//rules/opentitan:defs.bzl", "OPENTITAN_CPU", "opentitan_binary")
 load("//rules:linker.bzl", "ld_library")
@@ -24,22 +25,20 @@ cc_library(
     deps = [
         ":imm_rom_ext_epmp",
         "//hw/top:flash_ctrl_c_regs",
-        "//hw/top:otp_ctrl_c_regs",
         "//sw/device/lib/arch:device",
-        "//sw/device/lib/base:hardened",
         "//sw/device/lib/base:macros",
         "//sw/device/silicon_creator/lib:dbg_print",
         "//sw/device/silicon_creator/lib:epmp_state",
         "//sw/device/silicon_creator/lib:error",
         "//sw/device/silicon_creator/lib:manifest",
+        "//sw/device/silicon_creator/lib:shutdown",
         "//sw/device/silicon_creator/lib/base:boot_measurements",
         "//sw/device/silicon_creator/lib/base:sec_mmio",
         "//sw/device/silicon_creator/lib/base:static_critical",
-        "//sw/device/silicon_creator/lib/base:static_dice",
         "//sw/device/silicon_creator/lib/cert:dice_chain",
-        "//sw/device/silicon_creator/lib/drivers:flash_ctrl",
-        "//sw/device/silicon_creator/lib/drivers:otp",
+        "//sw/device/silicon_creator/lib/drivers:pinmux",
         "//sw/device/silicon_creator/lib/drivers:rnd",
+        "//sw/device/silicon_creator/lib/drivers:uart",
         "//sw/device/silicon_creator/lib/ownership:ownership_key",
         "//sw/device/silicon_creator/rom_ext:rom_ext_manifest",
     ],
@@ -68,7 +67,6 @@ ld_library(
         "//hw/top_earlgrey/sw/autogen:top_earlgrey_memory",
         "//sw/device:info_sections",
         "//sw/device/silicon_creator/lib/base:static_critical_sections",
-        "//sw/device/silicon_creator/lib/base:static_dice_sections",
     ],
 )
 
@@ -114,10 +112,14 @@ opentitan_binary(
     ],
 )
 
-create_imm_rom_ext_targets(
-    name = "main_section_slot_a",
-    src = ":main_binaries_slot_a",
-)
+[
+    create_imm_rom_ext_targets(
+        src = ":main_binaries_slot_a",
+        base_name = "main_section_slot_a",
+        exec_env = env,
+    )
+    for env in DEFAULT_EXEC_ENV
+]
 
 opentitan_binary(
     name = "main_binaries_slot_b",
@@ -134,10 +136,14 @@ opentitan_binary(
     ],
 )
 
-create_imm_rom_ext_targets(
-    name = "main_section_slot_b",
-    src = ":main_binaries_slot_b",
-)
+[
+    create_imm_rom_ext_targets(
+        src = ":main_binaries_slot_b",
+        base_name = "main_section_slot_b",
+        exec_env = env,
+    )
+    for env in DEFAULT_EXEC_ENV
+]
 
 opentitan_binary(
     name = "main_binaries_slot_virtual",
@@ -154,7 +160,11 @@ opentitan_binary(
     ],
 )
 
-create_imm_rom_ext_targets(
-    name = "main_section_slot_virtual",
-    src = ":main_binaries_slot_virtual",
-)
+[
+    create_imm_rom_ext_targets(
+        src = ":main_binaries_slot_virtual",
+        base_name = "main_section_slot_virtual",
+        exec_env = env,
+    )
+    for env in DEFAULT_EXEC_ENV
+]

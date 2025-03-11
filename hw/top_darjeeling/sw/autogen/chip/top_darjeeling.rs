@@ -109,7 +109,7 @@ pub const OTP_CTRL_CORE_SIZE_BYTES: usize = 0x8000;
 ///
 /// This should be used with #mmio_region_from_addr to access the memory-mapped
 /// registers associated with the peripheral (usually via a DIF).
-pub const OTP_CTRL_PRIM_BASE_ADDR: usize = 0x30140000;
+pub const OTP_CTRL_PRIM_BASE_ADDR: usize = 0x30138000;
 
 /// Peripheral size for prim device on otp_ctrl in top darjeeling.
 ///
@@ -123,7 +123,7 @@ pub const OTP_CTRL_PRIM_SIZE_BYTES: usize = 0x20;
 ///
 /// This should be used with #mmio_region_from_addr to access the memory-mapped
 /// registers associated with the peripheral (usually via a DIF).
-pub const LC_CTRL_REGS_BASE_ADDR: usize = 0x30150000;
+pub const LC_CTRL_REGS_BASE_ADDR: usize = 0x30140000;
 
 /// Peripheral size for regs device on lc_ctrl in top darjeeling.
 ///
@@ -137,7 +137,7 @@ pub const LC_CTRL_REGS_SIZE_BYTES: usize = 0x100;
 ///
 /// This should be used with #mmio_region_from_addr to access the memory-mapped
 /// registers associated with the peripheral (usually via a DIF).
-pub const ALERT_HANDLER_BASE_ADDR: usize = 0x30160000;
+pub const ALERT_HANDLER_BASE_ADDR: usize = 0x30150000;
 
 /// Peripheral size for alert_handler in top darjeeling.
 ///
@@ -725,7 +725,7 @@ pub const MBX_PCIE1_CORE_SIZE_BYTES: usize = 0x80;
 ///
 /// This should be used with #mmio_region_from_addr to access the memory-mapped
 /// registers associated with the peripheral (usually via a DIF).
-pub const SOC_DBG_CTRL_CORE_BASE_ADDR: usize = 0x30170000;
+pub const SOC_DBG_CTRL_CORE_BASE_ADDR: usize = 0x30160000;
 
 /// Peripheral size for core device on soc_dbg_ctrl in top darjeeling.
 ///
@@ -1734,96 +1734,94 @@ pub const PLIC_INTERRUPT_FOR_PERIPHERAL: [PlicPeripheral; 159] = [
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u32)]
 pub enum AlertPeripheral {
-    /// External Peripheral
-    External = 0,
     /// uart0
-    Uart0 = 1,
+    Uart0 = 0,
     /// gpio
-    Gpio = 2,
+    Gpio = 1,
     /// spi_device
-    SpiDevice = 3,
+    SpiDevice = 2,
     /// i2c0
-    I2c0 = 4,
+    I2c0 = 3,
     /// rv_timer
-    RvTimer = 5,
+    RvTimer = 4,
     /// otp_ctrl
-    OtpCtrl = 6,
+    OtpCtrl = 5,
     /// lc_ctrl
-    LcCtrl = 7,
+    LcCtrl = 6,
     /// spi_host0
-    SpiHost0 = 8,
+    SpiHost0 = 7,
     /// pwrmgr_aon
-    PwrmgrAon = 9,
+    PwrmgrAon = 8,
     /// rstmgr_aon
-    RstmgrAon = 10,
+    RstmgrAon = 9,
     /// clkmgr_aon
-    ClkmgrAon = 11,
+    ClkmgrAon = 10,
     /// pinmux_aon
-    PinmuxAon = 12,
+    PinmuxAon = 11,
     /// aon_timer_aon
-    AonTimerAon = 13,
+    AonTimerAon = 12,
     /// soc_proxy
-    SocProxy = 14,
+    SocProxy = 13,
     /// sram_ctrl_ret_aon
-    SramCtrlRetAon = 15,
+    SramCtrlRetAon = 14,
     /// rv_dm
-    RvDm = 16,
+    RvDm = 15,
     /// rv_plic
-    RvPlic = 17,
+    RvPlic = 16,
     /// aes
-    Aes = 18,
+    Aes = 17,
     /// hmac
-    Hmac = 19,
+    Hmac = 18,
     /// kmac
-    Kmac = 20,
+    Kmac = 19,
     /// otbn
-    Otbn = 21,
+    Otbn = 20,
     /// keymgr_dpe
-    KeymgrDpe = 22,
+    KeymgrDpe = 21,
     /// csrng
-    Csrng = 23,
+    Csrng = 22,
     /// edn0
-    Edn0 = 24,
+    Edn0 = 23,
     /// edn1
-    Edn1 = 25,
+    Edn1 = 24,
     /// sram_ctrl_main
-    SramCtrlMain = 26,
+    SramCtrlMain = 25,
     /// sram_ctrl_mbox
-    SramCtrlMbox = 27,
+    SramCtrlMbox = 26,
     /// rom_ctrl0
-    RomCtrl0 = 28,
+    RomCtrl0 = 27,
     /// rom_ctrl1
-    RomCtrl1 = 29,
+    RomCtrl1 = 28,
     /// dma
-    Dma = 30,
+    Dma = 29,
     /// mbx0
-    Mbx0 = 31,
+    Mbx0 = 30,
     /// mbx1
-    Mbx1 = 32,
+    Mbx1 = 31,
     /// mbx2
-    Mbx2 = 33,
+    Mbx2 = 32,
     /// mbx3
-    Mbx3 = 34,
+    Mbx3 = 33,
     /// mbx4
-    Mbx4 = 35,
+    Mbx4 = 34,
     /// mbx5
-    Mbx5 = 36,
+    Mbx5 = 35,
     /// mbx6
-    Mbx6 = 37,
+    Mbx6 = 36,
     /// mbx_jtag
-    MbxJtag = 38,
+    MbxJtag = 37,
     /// mbx_pcie0
-    MbxPcie0 = 39,
+    MbxPcie0 = 38,
     /// mbx_pcie1
-    MbxPcie1 = 40,
+    MbxPcie1 = 39,
     /// soc_dbg_ctrl
-    SocDbgCtrl = 41,
+    SocDbgCtrl = 40,
     /// racl_ctrl
-    RaclCtrl = 42,
+    RaclCtrl = 41,
     /// ac_range_check
-    AcRangeCheck = 43,
+    AcRangeCheck = 42,
     /// rv_core_ibex
-    RvCoreIbex = 44,
+    RvCoreIbex = 43,
 }
 
 /// Alert Handler Alert Source.
@@ -2023,10 +2021,10 @@ pub enum AlertId {
     SocDbgCtrlFatalFault = 93,
     /// soc_dbg_ctrl_recov_ctrl_update_err
     SocDbgCtrlRecovCtrlUpdateErr = 94,
-    /// racl_ctrl_fatal_fault
-    RaclCtrlFatalFault = 95,
     /// racl_ctrl_recov_ctrl_update_err
-    RaclCtrlRecovCtrlUpdateErr = 96,
+    RaclCtrlRecovCtrlUpdateErr = 95,
+    /// racl_ctrl_fatal_fault
+    RaclCtrlFatalFault = 96,
     /// ac_range_check_recov_ctrl_update_err
     AcRangeCheckRecovCtrlUpdateErr = 97,
     /// ac_range_check_fatal_fault
@@ -2140,8 +2138,8 @@ impl TryFrom<u32> for AlertId {
             92 => Ok(Self::MbxPcie1RecovFault),
             93 => Ok(Self::SocDbgCtrlFatalFault),
             94 => Ok(Self::SocDbgCtrlRecovCtrlUpdateErr),
-            95 => Ok(Self::RaclCtrlFatalFault),
-            96 => Ok(Self::RaclCtrlRecovCtrlUpdateErr),
+            95 => Ok(Self::RaclCtrlRecovCtrlUpdateErr),
+            96 => Ok(Self::RaclCtrlFatalFault),
             97 => Ok(Self::AcRangeCheckRecovCtrlUpdateErr),
             98 => Ok(Self::AcRangeCheckFatalFault),
             99 => Ok(Self::RvCoreIbexFatalSwErr),
@@ -2348,9 +2346,9 @@ pub const ALERT_FOR_PERIPHERAL: [AlertPeripheral; 103] = [
     AlertPeripheral::SocDbgCtrl,
     // SocDbgCtrlRecovCtrlUpdateErr -> AlertPeripheral::SocDbgCtrl
     AlertPeripheral::SocDbgCtrl,
-    // RaclCtrlFatalFault -> AlertPeripheral::RaclCtrl
-    AlertPeripheral::RaclCtrl,
     // RaclCtrlRecovCtrlUpdateErr -> AlertPeripheral::RaclCtrl
+    AlertPeripheral::RaclCtrl,
+    // RaclCtrlFatalFault -> AlertPeripheral::RaclCtrl
     AlertPeripheral::RaclCtrl,
     // AcRangeCheckRecovCtrlUpdateErr -> AlertPeripheral::AcRangeCheck
     AlertPeripheral::AcRangeCheck,

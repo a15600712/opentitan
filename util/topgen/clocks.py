@@ -231,8 +231,7 @@ class UnmanagedClocks:
         for clock in self.clks.values():
             if clock.signal_name == signal_name:
                 return clock
-        raise ValueError(
-            f"No clock defined with signal name {signal_name}") from None
+        raise ValueError(f"No clock defined with signal name {signal_name}") from None
 
 
 class Clocks:
