@@ -7,7 +7,7 @@ val_a:
     .word 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0,0x12345678, 0x9ABCDEF0,0x12345678, 0x9ABCDEF0
 val_b:
 /* 256-bit operand: "0" in the lowest word, zeros above. */
-    .word 0x0000000A, 0, 0, 0, 0, 0, 0, 0
+    .word 0x000000FF, 0, 0, 0, 0, 0, 0, 0
 
 
 .section .text

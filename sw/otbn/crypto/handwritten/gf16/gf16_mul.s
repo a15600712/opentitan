@@ -66,11 +66,11 @@ gf16_mul:
     bn.addi w29, w31, 3 
     /*w30 = w4 * w29 */
 
-    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
-    bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
-    bn.mulqacc      w4.2, w29.0, 0          
 
+    bn.mulqacc.z    w4.0, w29.0, 0
+    bn.mulqacc      w4.1, w29.0, 64
+    bn.mulqacc      w4.2, w29.0, 128
+    bn.mulqacc.wo   w30, w4.3, w29.0, 192
 
     bn.xor w1, w1, w30 
     /*w1 = (a<<1) ^ ((a_msb >> 3) * 3)*/
@@ -82,11 +82,11 @@ gf16_mul:
     bn.addi w29, w31, 1 /* {temp} w29 = {zeros} w31 + 1*/
     bn.and w30, w29, w30
 
-    bn.mulqacc.z    w1.0, w30.0, 0          
     /*w29 = (a64) * ((b32 >> 1) & 1)*/
-    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
-    bn.mulqacc      w1.2, w30.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
+    bn.mulqacc.z    w1.0, w30.0, 0          
+    bn.mulqacc      w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 128          
+    bn.mulqacc.wo    w29, w1.3, w30.0, 192  
 
     /*w0 = w0 ^ w29*/
     bn.xor w0, w0, w29
@@ -98,10 +98,12 @@ gf16_mul:
 
     bn.addi w29, w31, 3
 
-    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
     bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
-    bn.mulqacc      w4.2, w29.0, 0          
+    bn.mulqacc      w4.1, w29.0, 64  
+    bn.mulqacc      w4.2, w29.0, 128 
+    bn.mulqacc.wo   w30,w4.3, w29.0, 192
+    
+
     bn.xor w1, w1, w30 
     bn.rshi w30, w31, w2 >> 2
 
@@ -109,10 +111,9 @@ gf16_mul:
     bn.and w30, w29, w30
 
     bn.mulqacc.z    w1.0, w30.0, 0          
-
-    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
-    bn.mulqacc      w1.2, w30.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
+    bn.mulqacc      w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 128         
+    bn.mulqacc.wo   w29, w1.3, w30.0, 192
 
     bn.xor w0, w0, w29
 
@@ -123,10 +124,10 @@ gf16_mul:
 
     bn.addi w29, w31, 3
 
-    bn.mulqacc.so   w30.l, w4.1, w29.0, 64  
     bn.mulqacc.z    w4.0, w29.0, 0          
-    bn.mulqacc.so   w30.u, w4.3, w29.0, 64  
-    bn.mulqacc      w4.2, w29.0, 0          
+    bn.mulqacc      w4.1, w29.0, 64  
+    bn.mulqacc      w4.2, w29.0, 128  
+    bn.mulqacc.wo     w30,w4.3, w29.0, 192          
     bn.xor w1, w1, w30 
     bn.rshi w30, w31, w2 >> 3
 
@@ -134,18 +135,12 @@ gf16_mul:
     bn.and w30, w29, w30
 
     bn.mulqacc.z    w1.0, w30.0, 0          
-
-    bn.mulqacc.so   w29.l, w1.1, w30.0, 64  
-    bn.mulqacc      w1.2, w30.0, 0          
-    bn.mulqacc.so   w29.u, w1.3, w30.0, 64  
+    bn.mulqacc      w1.1, w30.0, 64  
+    bn.mulqacc      w1.2, w30.0, 128      
+    bn.mulqacc.wo   w29, w1.3, w30.0, 192  
 
     bn.xor w0, w0, w29
 
 
 
     ret
-
-
-
-
-

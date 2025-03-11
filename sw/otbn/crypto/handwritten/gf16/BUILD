@@ -1,5 +1,5 @@
 load("//rules:otbn.bzl", "otbn_library", "otbn_binary","otbn_sim_test")
-
+package(default_visibility = ["//visibility:public"])
 
 otbn_library(
     name = "gf16_mul",         # The library/app containing just gf16_mul
