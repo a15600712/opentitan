@@ -34,11 +34,8 @@ enum {
   kSpiClock = 20000,
 };
 
-OTTF_BACKDOOR_VAR
 uint8_t backdoor_cpha = UINT8_MAX;
-OTTF_BACKDOOR_VAR
 uint8_t backdoor_cpol = UINT8_MAX;
-OTTF_BACKDOOR_VAR
 uint32_t backdoor_data = UINT32_MAX;
 
 static status_t spi_config_test(dif_spi_host_t *spi);
@@ -83,7 +80,7 @@ static status_t spi_config_test(dif_spi_host_t *spi) {
   static uint32_t address = 0;
   OTTF_WAIT_FOR(backdoor_data != UINT32_MAX, kDefaultTimeoutMicros);
   uint8_t data[sizeof(backdoor_data)];
-  memcpy(data, (const void *)&backdoor_data, sizeof(data));
+  memcpy(data, &backdoor_data, sizeof(data));
   busy_spin_micros(40000);
   TRY(spi_flash_testutils_program_page(spi, data, sizeof(data), address,
                                        false));

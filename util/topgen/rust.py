@@ -5,13 +5,12 @@
 from typing import Dict
 
 from reggen.ip_block import IpBlock
-from version_file import VersionInformation
 
 from .lib import RustArrayMapping, RustEnum, RustFileHeader, TopGen
+from version_file import VersionInformation
 
 
 class TopGenRust(TopGen):
-
     def __init__(self, top_info, name_to_block: Dict[str, IpBlock],
                  version_stamp: VersionInformation):
         super().__init__(top_info, name_to_block, RustEnum, RustArrayMapping)

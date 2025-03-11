@@ -116,9 +116,9 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
     // JTAG read
     act_send_resp = true;
   } else if (cmd == 'B') {
-    // printf("BLINK ON!\n");
+    // printf("%s: BLINK ON!\n", ctx->display_name);
   } else if (cmd == 'b') {
-    // printf("BLINK OFF!\n");
+    // printf("%s: BLINK OFF!\n", ctx->display_name);
   } else if (cmd == 'Q') {
     // quit (client disconnect)
     act_quit = true;
@@ -156,9 +156,9 @@ void *jtagdpi_create(const char *display_name, int listen_port,
       "\n"
       "JTAG: Virtual JTAG interface %s is listening on port %d. Use\n"
       "OpenOCD and the following configuration to connect:\n"
-      "  adapter driver remote_bitbang\n"
-      "  remote_bitbang host localhost\n"
-      "  remote_bitbang port %d\n",
+      "  interface remote_bitbang\n"
+      "  remote_bitbang_host localhost\n"
+      "  remote_bitbang_port %d\n",
       display_name, listen_port, listen_port);
 
   return (void *)ctx;

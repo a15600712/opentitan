@@ -15,9 +15,6 @@ package top_racl_pkg;
   // RACL Policy selector type
   typedef logic [RaclPolicySelLen-1:0] racl_policy_sel_t;
 
-  // Enable TLUL error response on RACL denied accesses
-  parameter bit ErrorRsp = ${int(racl_config['error_response'])};
-
   // Number of RACL bits transferred
   parameter int unsigned NrRaclBits = ${racl_config['nr_role_bits']};
 
@@ -53,12 +50,11 @@ package top_racl_pkg;
 
   // RACL information logged in case of a denial
   typedef struct packed {
-    logic                      valid;        // Error information is valid
-    logic                      overflow;     // Error overflow, More than 1 RACL error at a time
-    racl_role_t                racl_role;
-    ctn_uid_t                  ctn_uid;
-    logic                      read_access;  // 0: Write access, 1: Read access
-    logic [top_pkg::TL_AW-1:0] request_address;
+    logic       valid;        // Error information is valid
+    logic       overflow;     // Error overflow, More than 1 RACL error at a time
+    racl_role_t racl_role;
+    ctn_uid_t   ctn_uid;
+    logic       read_access;  // 0: Write access, 1: Read access
   } racl_error_log_t;
 
   // Range definition for RACL protected SRAM adapter
@@ -105,19 +101,6 @@ package top_racl_pkg;
 <% racl_role_name_len = max((len(name) for name in racl_config.get('roles', {}).keys()), default=0) %>\
   % for racl_role_name, racl_role in racl_config.get('roles', {}).items():
   parameter racl_role_t RACL_ROLE_${racl_role_name.upper().ljust(racl_role_name_len)} = ${racl_config['nr_role_bits']}'h${f"{racl_role['role_id']:x}"};
-  % endfor
-
-% endif
-% if racl_config.get('policies'):
-  % for racl_group, policies in racl_config.get('policies').items():
-  /**
-   * RACL Policy Selectors for group ${racl_group}
-   */
-<% group_suffix = f"_{racl_group.upper()}" if racl_group and racl_group != "Null" else "" %>\
-    % for policy_idx,policy in enumerate(list(policies)):
-<% name = "RACL_POLICY_SEL{}_{}".format(group_suffix,policy['name'].upper()) %>\
-  parameter racl_policy_sel_t ${name} = ${policy_idx};
-    % endfor
   % endfor
 
 % endif

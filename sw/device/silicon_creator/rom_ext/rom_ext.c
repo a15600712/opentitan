@@ -211,8 +211,9 @@ static rom_error_t rom_ext_verify(const manifest_t *manifest,
   hmac_sha256_init();
   // Hash usage constraints.
   manifest_usage_constraints_t usage_constraints_from_hw;
-  sigverify_usage_constraints_get(manifest->usage_constraints.selector_bits |
-                                      keyring.key[verify_key]->usage_constraint,
+  // TODO(cfrantz): Combine key's usage constraints with manifest's
+  // usage_constraints.
+  sigverify_usage_constraints_get(manifest->usage_constraints.selector_bits,
                                   &usage_constraints_from_hw);
   hmac_sha256_update(&usage_constraints_from_hw,
                      sizeof(usage_constraints_from_hw));
@@ -290,6 +291,8 @@ static rom_error_t rom_ext_boot(boot_data_t *boot_data,
 
   // Remove write and erase access to the certificate pages before handing over
   // execution to the owner firmware (owner firmware can still read).
+  flash_ctrl_cert_info_page_owner_restrict(
+      &kFlashCtrlInfoPageAttestationKeySeeds);
   flash_ctrl_cert_info_page_owner_restrict(&kFlashCtrlInfoPageDiceCerts);
 
   // Disable access to silicon creator info pages, the OTP creator partition
@@ -581,6 +584,12 @@ static rom_error_t rom_ext_start(boot_data_t *boot_data, boot_log_t *boot_log) {
   boot_log->rom_ext_major = self->version_major;
   boot_log->rom_ext_minor = self->version_minor;
   boot_log->rom_ext_size = CHIP_ROM_EXT_SIZE_MAX;
+  boot_log->rom_ext_nonce = boot_data->nonce;
+  boot_log->ownership_state = boot_data->ownership_state;
+  boot_log->ownership_transfers = boot_data->ownership_transfers;
+  boot_log->rom_ext_min_sec_ver = boot_data->min_security_version_rom_ext;
+  boot_log->bl0_min_sec_ver = boot_data->min_security_version_bl0;
+  boot_log->primary_bl0_slot = boot_data->primary_bl0_slot;
 
   // Initialize the chip ownership state.
   rom_error_t error;
@@ -611,24 +620,18 @@ static rom_error_t rom_ext_start(boot_data_t *boot_data, boot_log_t *boot_log) {
     }
   }
 
-  // Synchronize the boot_log entries that could be changed by boot services.
+  // Re-sync the boot_log entries that could be changed by boot services.
   boot_log->rom_ext_nonce = boot_data->nonce;
   boot_log->ownership_state = boot_data->ownership_state;
-  boot_log->ownership_transfers = boot_data->ownership_transfers;
-  boot_log->rom_ext_min_sec_ver = boot_data->min_security_version_rom_ext;
-  boot_log->bl0_min_sec_ver = boot_data->min_security_version_bl0;
-  boot_log->primary_bl0_slot = boot_data->primary_bl0_slot;
   boot_log_digest_update(boot_log);
 
   if (uart_break_detect(kRescueDetectTime) == kHardenedBoolTrue) {
     dbg_printf("rescue: remember to clear break\r\n");
     uart_enable_receiver();
-    ownership_pages_lockdown(boot_data, /*rescue=*/kHardenedBoolTrue);
     // TODO: update rescue protocol to accept boot data and rescue
     // config from the owner_config.
     error = rescue_protocol(boot_data, owner_config.rescue);
   } else {
-    ownership_pages_lockdown(boot_data, /*rescue=*/kHardenedBoolFalse);
     error = rom_ext_try_next_stage(boot_data, boot_log);
   }
   return error;

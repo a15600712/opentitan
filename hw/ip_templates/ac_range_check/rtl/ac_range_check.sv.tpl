@@ -94,15 +94,6 @@ module ${module_instance_name}
     );
   end
 
-  assign hw2reg.alert_status.shadowed_storage_err.d = 1'b1;
-  assign hw2reg.alert_status.shadowed_storage_err.de = shadowed_storage_err;
-  assign hw2reg.alert_status.shadowed_update_err.d = 1'b1;
-  assign hw2reg.alert_status.shadowed_update_err.de = shadowed_update_err;
-  assign hw2reg.alert_status.reg_intg_err.d = 1'b1;
-  assign hw2reg.alert_status.reg_intg_err.de = reg_intg_error;
-  assign hw2reg.alert_status.counter_err.d = 1'b1;
-  assign hw2reg.alert_status.counter_err.de = deny_cnt_error;
-
   //////////////////////////////////////////////////////////////////////////////
   // Range Check Logic
   //////////////////////////////////////////////////////////////////////////////
@@ -265,7 +256,7 @@ module ${module_instance_name}
 
   // Request is denied because no range was matching at all
   assign hw2reg.log_status.denied_no_match.de = log_first_deny | clear_log;
-  assign hw2reg.log_status.denied_no_match.d = log_first_deny ? ~(|addr_hit) : 1'b0;
+  assign hw2reg.log_status.denied_no_match.d = ~(|addr_hit);
 
   // TODO(#25454): RACL status gets implemented once RACL is in
   assign hw2reg.log_status.denied_racl_read.de = log_first_deny | clear_log;
@@ -276,12 +267,11 @@ module ${module_instance_name}
   assign hw2reg.log_status.denied_racl_write.d  = '0;
 
   assign hw2reg.log_status.denied_source_role.de = log_first_deny | clear_log;
-  assign hw2reg.log_status.denied_source_role.d  = log_first_deny ? racl_role : '0;
+  assign hw2reg.log_status.denied_source_role.d  = racl_role;
 
   assign hw2reg.log_status.denied_ctn_uid.de = log_first_deny | clear_log;
   assign hw2reg.log_status.denied_ctn_uid.d  =
-      log_first_deny ? top_racl_pkg::tlul_extract_ctn_uid_bits(ctn_tl_h2d_i.a_user.rsvd)
-                     : '0;
+    top_racl_pkg::tlul_extract_ctn_uid_bits(ctn_tl_h2d_i.a_user.rsvd);
 
   // TODO(#25456): Need to determine the index that caused the denial
   assign hw2reg.log_status.deny_range_index.de = log_first_deny | clear_log;

@@ -98,7 +98,6 @@ opentitan_test(
         {
             "//hw/top_earlgrey:fpga_cw310_sival": None,
             "//hw/top_earlgrey:silicon_creator": None,
-            "//hw/top_darjeeling:sim_dv": None,
         },
     ),
     qemu = qemu_params(
@@ -108,6 +107,7 @@ opentitan_test(
     ),
     deps = [
         "//hw/ip/aes:model",
+        "//hw/top_earlgrey/sw/autogen:top_earlgrey",
         "//sw/device/lib/base:memory",
         "//sw/device/lib/base:mmio",
         "//sw/device/lib/dif:aes",
@@ -2828,12 +2828,12 @@ opentitan_test(
         {
             "//hw/top_earlgrey:fpga_cw310_sival": None,
             "//hw/top_earlgrey:silicon_creator": None,
-            "//hw/top_darjeeling:sim_dv": None,
         },
     ),
     verilator = verilator_params(timeout = "long"),
     deps = [
         ":otbn_randomness_impl",
+        "//hw/top_earlgrey/sw/autogen:top_earlgrey",
         "//sw/device/lib/dif:base",
         "//sw/device/lib/dif:clkmgr",
         "//sw/device/lib/dif:otbn",
@@ -7478,26 +7478,6 @@ opentitan_test(
         "//sw/device/lib/runtime:print",
         "//sw/device/lib/testing:dma_testutils",
         "//sw/device/lib/testing:pinmux_testutils",
-        "//sw/device/lib/testing/test_framework:ottf_main",
-    ],
-)
-
-opentitan_test(
-    name = "keymgr_dpe_key_derivation_test",
-    srcs = ["keymgr_dpe_key_derivation_test.c"],
-    exec_env = {
-        "//hw/top_darjeeling:sim_dv": None,
-    },
-    deps = [
-        "//hw/top:dt",
-        "//sw/device/lib/arch:device",
-        "//sw/device/lib/base:macros",
-        "//sw/device/lib/dif:keymgr_dpe",
-        "//sw/device/lib/dif:kmac",
-        "//sw/device/lib/runtime:hart",
-        "//sw/device/lib/runtime:log",
-        "//sw/device/lib/runtime:print",
-        "//sw/device/lib/testing:keymgr_dpe_testutils",
         "//sw/device/lib/testing/test_framework:ottf_main",
     ],
 )

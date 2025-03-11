@@ -51,12 +51,10 @@ static pwrmgr_isr_ctx_t pwrmgr_isr_ctx = {
 // Preserve wakeup_detector_selected over multiple resets
 OT_SET_BSS_SECTION(".non_volatile_scratch", uint32_t wakeup_detector_idx;)
 
-OTTF_BACKDOOR_VAR
-int8_t sival_mio_pad = -1;  // -1 means not assigned yet.
-OTTF_BACKDOOR_VAR
+OT_SECTION(".data") int8_t sival_mio_pad = -1;  // -1 means not assigned yet.
+OT_SECTION(".data")
 int8_t sival_wakeup_detector_idx = -1;  // -1 means not assigned yet.
-OTTF_BACKDOOR_VAR
-bool sival_ready_to_sleep = false;
+OT_SECTION(".data") bool sival_ready_to_sleep = 0;
 
 /**
  * External interrupt handler.

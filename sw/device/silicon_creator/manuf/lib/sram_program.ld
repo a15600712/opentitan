@@ -58,16 +58,16 @@ SECTIONS {
   } > ram_main : sram_segment
 
   .text : ALIGN(4) {
-    *(.crt)
-    *(.text)
-    *(.text.*)
+    KEEP(*(.crt))
+    KEEP(*(.text))
+    KEEP(*(.text.*))
     . = ALIGN(4);
     _text_end = .;
   } > ram_main : sram_segment
 
   .rodata : ALIGN(4) {
-    *(.rodata)
-    *(.rodata.*)
+    KEEP(*(.rodata))
+    KEEP(*(.rodata.*))
     . = ALIGN(4);
     __rodata_end = .;
   } > ram_main : sram_segment
@@ -83,14 +83,14 @@ SECTIONS {
      * difference to distinguish data from small data. */
     __global_pointer$ = . + 2048;
 
-    *(.data)
-    *(.data.*)
+    KEEP(*(.data))
+    KEEP(*(.data.*))
 
     /* Place all small data sections together. */
-    *(.srodata)
-    *(.srodata.*)
-    *(.sdata)
-    *(.sdata.*)
+    KEEP(*(.srodata))
+    KEEP(*(.srodata.*))
+    KEEP(*(.sdata))
+    KEEP(*(.sdata.*))
     . = ALIGN(4);
     _crc_end = .;
   } > ram_main : sram_segment

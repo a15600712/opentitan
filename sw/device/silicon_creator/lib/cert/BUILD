@@ -129,7 +129,6 @@ cc_library(
     hdrs = ["dice.h"],
     deps = [
         ":cert",
-        ":template",
         "//sw/device/lib/base:memory",
         "//sw/device/lib/base:status",
         "//sw/device/lib/testing/test_framework:check",
@@ -150,10 +149,10 @@ cc_library(
 
 cc_library(
     name = "cbor",
-    srcs = ["cbor.c"],
     hdrs = ["cbor.h"],
     deps = [
         "//sw/device/lib/base:status",
+        "@open-dice//:cbor_reader_writer",
     ],
 )
 
@@ -204,7 +203,6 @@ cc_library(
     hdrs = ["tpm.h"],
     deps = [
         ":cert",
-        ":template",
         "//sw/device/lib/base:status",
         "//sw/device/lib/testing/test_framework:check",
         "//sw/device/silicon_creator/lib/cert:tpm_ek_template_library",
@@ -228,8 +226,9 @@ cc_library(
         "//sw/device/silicon_creator/lib:manifest",
         "//sw/device/silicon_creator/lib/base:boot_measurements",
         "//sw/device/silicon_creator/lib/base:sec_mmio",
-        "//sw/device/silicon_creator/lib/base:static_dice_cdi_0",
         "//sw/device/silicon_creator/lib/base:util",
+        "//sw/device/silicon_creator/lib/cert:cdi_0_template_library",
+        "//sw/device/silicon_creator/lib/cert:cdi_1_template_library",
         "//sw/device/silicon_creator/lib/cert:dice",
         "//sw/device/silicon_creator/lib/drivers:flash_ctrl",
         "//sw/device/silicon_creator/lib/drivers:hmac",

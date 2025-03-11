@@ -10,7 +10,6 @@ use std::convert::TryFrom;
 use std::io::{Read, Write};
 
 use super::misc::{KeyMaterial, OwnershipKeyAlg, TlvHeader, TlvTag};
-use super::GlobalFlags;
 use crate::with_unknown;
 
 with_unknown! {
@@ -26,10 +25,7 @@ with_unknown! {
 #[derive(Debug, Serialize, Deserialize, Annotate)]
 pub struct OwnerApplicationKey {
     /// Header identifying this struct.
-    #[serde(
-        skip_serializing_if = "GlobalFlags::not_debug",
-        default = "OwnerApplicationKey::default_header"
-    )]
+    #[serde(default)]
     pub header: TlvHeader,
     /// The key algorithm for this key (ECDSA, SPX+, etc).
     pub key_alg: OwnershipKeyAlg,
@@ -52,7 +48,7 @@ pub struct OwnerApplicationKey {
 impl Default for OwnerApplicationKey {
     fn default() -> Self {
         Self {
-            header: Self::default_header(),
+            header: TlvHeader::new(TlvTag::ApplicationKey, 0),
             key_alg: OwnershipKeyAlg::default(),
             key_domain: ApplicationKeyDomain::default(),
             key_diversifier: [0u32; 7],
@@ -63,10 +59,6 @@ impl Default for OwnerApplicationKey {
 }
 
 impl OwnerApplicationKey {
-    pub fn default_header() -> TlvHeader {
-        TlvHeader::new(TlvTag::ApplicationKey, 0, "0.0")
-    }
-
     pub fn read(src: &mut impl Read, header: TlvHeader) -> Result<Self> {
         let key_alg = OwnershipKeyAlg(src.read_u32::<LittleEndian>()?);
         let key_domain = ApplicationKeyDomain(src.read_u32::<LittleEndian>()?);
@@ -85,7 +77,7 @@ impl OwnerApplicationKey {
     }
 
     pub fn write(&self, dest: &mut impl Write) -> Result<()> {
-        let header = TlvHeader::new(TlvTag::ApplicationKey, 48 + self.key.len(), "0.0");
+        let header = TlvHeader::new(TlvTag::ApplicationKey, 48 + self.key.len());
         header.write(dest)?;
         dest.write_u32::<LittleEndian>(u32::from(self.key_alg))?;
         dest.write_u32::<LittleEndian>(u32::from(self.key_domain))?;
@@ -114,6 +106,10 @@ mod test {
 00000060: c0 00 00 00 d0 00 00 00 e0 00 00 00 f0 00 00 00  ................\n\
 ";
     const OWNER_APPLICATION_KEY_JSON: &str = r#"{
+  header: {
+    identifier: "ApplicationKey",
+    length: 112
+  },
   key_alg: "EcdsaP256",
   key_domain: "Prod",
   key_diversifier: [

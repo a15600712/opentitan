@@ -21,9 +21,6 @@ package top_racl_pkg;
   // RACL Policy selector type
   typedef logic [RaclPolicySelLen-1:0] racl_policy_sel_t;
 
-  // Enable TLUL error response on RACL denied accesses
-  parameter bit ErrorRsp = 1;
-
   // Number of RACL bits transferred
   parameter int unsigned NrRaclBits = 4;
 
@@ -59,12 +56,11 @@ package top_racl_pkg;
 
   // RACL information logged in case of a denial
   typedef struct packed {
-    logic                      valid;        // Error information is valid
-    logic                      overflow;     // Error overflow, More than 1 RACL error at a time
-    racl_role_t                racl_role;
-    ctn_uid_t                  ctn_uid;
-    logic                      read_access;  // 0: Write access, 1: Read access
-    logic [top_pkg::TL_AW-1:0] request_address;
+    logic       valid;        // Error information is valid
+    logic       overflow;     // Error overflow, More than 1 RACL error at a time
+    racl_role_t racl_role;
+    ctn_uid_t   ctn_uid;
+    logic       read_access;  // 0: Write access, 1: Read access
   } racl_error_log_t;
 
   // Range definition for RACL protected SRAM adapter
@@ -108,13 +104,6 @@ package top_racl_pkg;
   parameter racl_role_t RACL_ROLE_ROT   = 4'h0;
   parameter racl_role_t RACL_ROLE_ROLE1 = 4'h1;
   parameter racl_role_t RACL_ROLE_SOC   = 4'h2;
-
-  /**
-   * RACL Policy Selectors for group Null
-   */
-  parameter racl_policy_sel_t RACL_POLICY_SEL_ALL_RD_WR = 0;
-  parameter racl_policy_sel_t RACL_POLICY_SEL_ROT_PRIVATE = 1;
-  parameter racl_policy_sel_t RACL_POLICY_SEL_SOC_ROT = 2;
 
 
 endpackage
