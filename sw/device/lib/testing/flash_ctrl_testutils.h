@@ -238,36 +238,6 @@ enum {
 };
 
 /**
- * Init the backdoor API, it should be called before
- * `flash_ctrl_testutils_backdoor_wait_update`.
- *
- * @param flash_state A flash_ctrl handle.
- * @return The result of the operation.
- */
-OT_WARN_UNUSED_RESULT
-status_t flash_ctrl_testutils_backdoor_init(
-    dif_flash_ctrl_state_t *flash_state);
-
-/**
- * This detects changes in a specific byte in flash memory contents with a
- * timeout. In some cases the party updating it uses a backdoor overwrite,
- * so this code flushes the read buffers since the backdoor API has no
- * mechanism to flush.
- *
- * The `flash_ctrl_testutils_backdoor_init` function should be called prior
- * to this.
- *
- * @param addr The volatile address of a uint8_t variable where an update
- * is expected.
- * @param prior_data The prior data value.
- * @param timeout_usec Timeout in microseconds.
- */
-OT_WARN_UNUSED_RESULT
-status_t flash_ctrl_testutils_backdoor_wait_update(const volatile uint8_t *addr,
-                                                   uint8_t prior_data,
-                                                   size_t timeout_usec);
-
-/**
  * Write to log any faults set in the status register.
  *
  * @param flash_state A flash_ctrl state handle.

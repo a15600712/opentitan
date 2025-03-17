@@ -78,6 +78,11 @@ dt_instance_id_t dt_plic_id_to_instance_id(dt_plic_irq_id_t irq);
  */
 typedef ${top_name.as_snake_case()}_alert_id_t dt_alert_id_t;
 
+/** Number of alerts. */
+enum {
+  kDtAlertCount = ${top_name.as_c_enum()}AlertIdLast + 1,
+};
+
 /**
  * Get the instance ID for a given alert ID.
  *
@@ -105,6 +110,13 @@ ${helper.clock_enum.render()}
  * @return Clock frequency in Hz.
  */
 uint32_t dt_clock_frequency(dt_clock_t clk);
+
+/**
+ * List of resets.
+ *
+ * Resets are guaranteed to be numbered consecutively from 0.
+ */
+${helper.reset_enum.render()}
 
 /**
  * List of pads names.

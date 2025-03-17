@@ -59,6 +59,13 @@ typedef struct owner_application_keyring {
 } owner_application_keyring_t;
 
 /**
+ * Determine if the ownership update mode is one of the "newversion" modes.
+ *
+ * @return kHardenedBoolTrue if it is a newversion mode.
+ */
+hardened_bool_t owner_block_newversion_mode(void);
+
+/**
  * Check if owner page 1 is valid for ownership transfer.
  *
  * @param bootdata The current bootdata.
@@ -88,6 +95,17 @@ void owner_config_default(owner_config_t *config);
 rom_error_t owner_block_parse(const owner_block_t *block,
                               owner_config_t *config,
                               owner_application_keyring_t *keyring);
+
+/**
+ * Check the flash config for errors.
+ *
+ * Currently, this checks that a flash config region covering the ROM_EXT
+ * is compatible with the default flash config region.
+ *
+ * @param flash A pointer to a flash configuration struct.
+ * @return error code.
+ */
+rom_error_t owner_block_flash_check(const owner_flash_config_t *flash);
 
 /**
  * Apply the flash configuration parameters from the owner block.

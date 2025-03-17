@@ -765,6 +765,7 @@ module top_darjeeling #(
   otp_ctrl_pkg::otp_manuf_state_t       lc_ctrl_otp_manuf_state;
   otp_ctrl_pkg::otp_device_id_t       keymgr_dpe_otp_device_id;
   prim_mubi_pkg::mubi8_t       sram_ctrl_main_otp_en_sram_ifetch;
+  prim_mubi_pkg::mubi8_t       rv_dm_otp_dis_rv_dm_late_debug;
 
   // define mixed connection to port
   assign edn0_edn_req[2] = ast_edn_req_i;
@@ -833,6 +834,9 @@ module top_darjeeling #(
   // TODO: This should be further automated in the future.
   assign rv_core_ibex_irq_timer = intr_rv_timer_timer_expired_hart0_timer0;
   assign rv_core_ibex_hart_id = '0;
+
+  // Unconditionally disable the late debug feature and enable early debug
+  assign rv_dm_otp_dis_rv_dm_late_debug = prim_mubi_pkg::MuBi8True;
 
   assign rv_core_ibex_boot_addr = ADDR_SPACE_ROM_CTRL0__ROM;
 
@@ -1578,6 +1582,8 @@ module top_darjeeling #(
       .aon_timer_rst_req_o(pwrmgr_aon_rstreqs[0]),
       .lc_escalate_en_i(lc_ctrl_lc_escalate_en),
       .sleep_mode_i(pwrmgr_aon_low_power),
+      .racl_policies_i(top_racl_pkg::RACL_POLICY_VEC_DEFAULT),
+      .racl_error_o(),
       .tl_i(aon_timer_aon_tl_req),
       .tl_o(aon_timer_aon_tl_rsp),
 
@@ -1723,7 +1729,7 @@ module top_darjeeling #(
       .lc_hw_debug_en_i(lc_ctrl_lc_hw_debug_en),
       .lc_dft_en_i(lc_ctrl_pkg::Off),
       .pinmux_hw_debug_en_i(lc_ctrl_pkg::Off),
-      .otp_dis_rv_dm_late_debug_i(prim_mubi_pkg::MuBi8False),
+      .otp_dis_rv_dm_late_debug_i(rv_dm_otp_dis_rv_dm_late_debug),
       .unavailable_i(1'b0),
       .ndmreset_req_o(rv_dm_ndmreset_req),
       .dmactive_o(),
@@ -3431,5 +3437,10 @@ module top_darjeeling #(
 
   // make sure scanmode_i is never X (including during reset)
   `ASSERT_KNOWN(scanmodeKnown, scanmode_i, clk_main_i, 0)
+
+  // TODO(#26288) : EnCsrngSwAppReadSize should not be present in Darjeeling; presently, this signal
+  // must be used to avoid a lint error.
+  logic unused_en_csrng;
+  assign unused_en_csrng = ^otp_ctrl_otp_broadcast.hw_cfg1_data.en_csrng_sw_app_read;
 
 endmodule

@@ -660,6 +660,7 @@
     {
       name: gpio
       type: gpio
+      template_type: gpio
       clock_srcs:
       {
         clk_i: io_div4
@@ -678,6 +679,11 @@
         GpioAsHwStrapsEn: "1"
         GpioAsyncOn: "1"
       }
+      ipgen_param:
+      {
+        num_inp_period_counters: 8
+      }
+      attr: ipgen
       clock_connections:
       {
         clk_i: clkmgr_aon_clocks.clk_io_div4_peri
@@ -3637,6 +3643,32 @@
           index: -1
         }
         {
+          name: racl_policies
+          desc:
+            '''
+            Incoming RACL policy vector from a racl_ctrl instance.
+            The policy selection vector (parameter) selects the policy for each register.
+            '''
+          struct: racl_policy_vec
+          package: top_racl_pkg
+          type: uni
+          act: rcv
+          width: 1
+          inst_name: aon_timer_aon
+          index: -1
+        }
+        {
+          name: racl_error
+          desc: RACL error log information of this module.
+          struct: racl_error_log
+          package: top_racl_pkg
+          type: uni
+          act: req
+          width: 1
+          inst_name: aon_timer_aon
+          index: -1
+        }
+        {
           name: tl
           struct: tl
           package: tlul_pkg
@@ -4653,6 +4685,7 @@
           width: 1
           default: prim_mubi_pkg::MuBi8False
           inst_name: rv_dm
+          top_signame: rv_dm_otp_dis_rv_dm_late_debug
           index: -1
         }
         {
@@ -11534,6 +11567,7 @@
       lc_ctrl.otp_manuf_state
       keymgr_dpe.otp_device_id
       sram_ctrl_main.otp_en_sram_ifetch
+      rv_dm.otp_dis_rv_dm_late_debug
     ]
     external:
     {
@@ -13475,7 +13509,7 @@
               {
                 hart: 0x30000000
               }
-              size_byte: 0x80
+              size_byte: 0x100
             }
           ]
           xbar: false
@@ -22005,6 +22039,32 @@
         index: -1
       }
       {
+        name: racl_policies
+        desc:
+          '''
+          Incoming RACL policy vector from a racl_ctrl instance.
+          The policy selection vector (parameter) selects the policy for each register.
+          '''
+        struct: racl_policy_vec
+        package: top_racl_pkg
+        type: uni
+        act: rcv
+        width: 1
+        inst_name: aon_timer_aon
+        index: -1
+      }
+      {
+        name: racl_error
+        desc: RACL error log information of this module.
+        struct: racl_error_log
+        package: top_racl_pkg
+        type: uni
+        act: req
+        width: 1
+        inst_name: aon_timer_aon
+        index: -1
+      }
+      {
         name: tl
         struct: tl
         package: tlul_pkg
@@ -22602,6 +22662,7 @@
         width: 1
         default: prim_mubi_pkg::MuBi8False
         inst_name: rv_dm
+        top_signame: rv_dm_otp_dis_rv_dm_late_debug
         index: -1
       }
       {
@@ -31334,6 +31395,15 @@
         package: prim_mubi_pkg
         struct: mubi8
         signame: sram_ctrl_main_otp_en_sram_ifetch
+        width: 1
+        type: uni
+        end_idx: -1
+        default: prim_mubi_pkg::MuBi8False
+      }
+      {
+        package: prim_mubi_pkg
+        struct: mubi8
+        signame: rv_dm_otp_dis_rv_dm_late_debug
         width: 1
         type: uni
         end_idx: -1

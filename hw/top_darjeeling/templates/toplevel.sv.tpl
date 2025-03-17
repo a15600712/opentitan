@@ -370,6 +370,9 @@ module top_${top["name"]} #(
   assign rv_core_ibex_irq_timer = intr_rv_timer_timer_expired_hart0_timer0;
   assign rv_core_ibex_hart_id = '0;
 
+  // Unconditionally disable the late debug feature and enable early debug
+  assign rv_dm_otp_dis_rv_dm_late_debug = prim_mubi_pkg::MuBi8True;
+
   ## Not all top levels have a rom controller.
   ## For those that do not, reference the ROM directly.
 <% num_rom_ctrl = lib.num_rom_ctrl(top["module"]) %>\
@@ -751,5 +754,10 @@ slice = str(alert_idx+w-1) + ":" + str(alert_idx)
 
   // make sure scanmode_i is never X (including during reset)
   `ASSERT_KNOWN(scanmodeKnown, scanmode_i, clk_main_i, 0)
+
+  // TODO(#26288) : EnCsrngSwAppReadSize should not be present in Darjeeling; presently, this signal
+  // must be used to avoid a lint error.
+  logic unused_en_csrng;
+  assign unused_en_csrng = ^otp_ctrl_otp_broadcast.hw_cfg1_data.en_csrng_sw_app_read;
 
 endmodule

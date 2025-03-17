@@ -295,6 +295,7 @@
     },
     { name: "gpio",
       type: "gpio",
+      template_type: "gpio",
       clock_srcs: {clk_i: "io_div4"},
       clock_group: "peri",
       reset_connections: {rst_ni: "lc_io_div4"},
@@ -304,7 +305,11 @@
       param_decl: {
         GpioAsHwStrapsEn: "1",
         GpioAsyncOn: "1"
+      },
+      ipgen_param: {
+        num_inp_period_counters: 8
       }
+      attr: "ipgen"
     },
     { name: "spi_device",
       type: "spi_device",
@@ -1346,6 +1351,8 @@
         'lc_ctrl.otp_manuf_state',
         'keymgr_dpe.otp_device_id',
         'sram_ctrl_main.otp_en_sram_ifetch',
+        # Unconditionally disable the late debug feature and enable early debug
+        'rv_dm.otp_dis_rv_dm_late_debug'
     ],
 
     // ext is to create port in the top.
