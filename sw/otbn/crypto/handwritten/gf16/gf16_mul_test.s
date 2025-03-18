@@ -4,10 +4,10 @@
 .balign 32
 /* 256-bit operand */
 val_a:
-    .word 0xaaaaaaaa, 0xbbbbbbbb
+    .word 0x00000000, 0x11111111
+	.word 0xaaaaaaaa, 0xbbbbbbbb
 	.word 0xcccccccc, 0xdddddddd
 	.word 0xeeeeeeee, 0xffffffff
-	.word 0x00000000, 0x11111111
 .balign 32
 val_b:
 /* 256-bit operand: space for 256 bits (32 bytes) */
