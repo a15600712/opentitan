@@ -11,6 +11,7 @@ qword_msb:
 .balign 4
 .global gf16_mul
 /*
+x5,x6
 @param[out]  w0: ( Result = a * b)
 @param[in]   w1: ( input a ) 64 gf16 element (256bits)
 @param[in]   w2: ( input b )  1 gf16 element (256bits)
@@ -32,13 +33,12 @@ gf16_mul:
     /*make sure w31 is zero*/
     bn.xor w31, w31, w31
     bn.xor w0, w0, w0
-
     la x5, qword_msb
     li x6, 3
     bn.lid x6, 0(x5)  
     /*w30= b & 1*/
 
-    bn.addi w27, w27, 1 /*{temp} w30 = 1 */
+    bn.addi w27, w31, 1 /*{temp} w27 = 1 */
     bn.and w30, w2, w27 /*{temp} w30 = {1} w30 & {b} w2*/
     /*w0 = a * (w30)*/
     
