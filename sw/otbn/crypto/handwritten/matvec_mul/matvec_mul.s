@@ -24,7 +24,7 @@ matrixA:
 
 .balign 32
 vectorB:
-	.word 0x0010,0,0,0,0,0,0,0
+	.word 0x2222,0,0,0,0,0,0,0
 .balign 4
 n_A_width:
 	.word 0x4
@@ -37,42 +37,28 @@ n_A_vec_byte:
 .balign 4
 .global _gf16matvec_mul
 _gf16matvec_mul:
-
-	/*w31 zero*/
+	/*make sure w31 is zero*/
 	bn.xor w31, w31, w31
-
-	/*x5 = n_A_width*/
-	la x5, n_A_width
-	lw x5, 0(x5)
-
-
-	/*prep load matrixA*/
-	la x29, matrixA
-	addi x30, x0, 1
-
-	bn.xor w26, w26, w26
-	/*w26 vectorB */
-	la    x6, vectorB
-	addi  x7, x0,26
-	bn.lid x7, 0(x6)
-
-	/*w25 0xf mask*/
-	bn.addi w25, w31, 0xf
+	/*x2:address matrixA*/
+	la x2, matrixA
+	/*x4:address vectorB*/
+	la x4, vectorB
+	addi x3,x0,5
+	/*w5:vectorB*/
+	bn.lid x3, 0(x4)
 	
+	la x7, n_A_width
+	lw x7, 0(x7)
+	addi x3,x0,1
 
-	/*w5:accum*/
-	bn.xor w5, w5, w5
+	bn.addi w6,w31,0xf
 	
-	loop x5, 4
-		/*w1:MatrixA and increment every iter*/
-		bn.lid x30, 0(x29++)
-		/*select  LSB for gf16mul*/
-		bn.and w2, w25, w26
-		bn.rshi w26, w31,w26 >> 4
-		/*jal gf16_mul*/
-		/*jal x1, gf16_mul
-		bn.xor w5,w5,w0*/
+	loop x7,5
+		bn.lid x3, 0(x2++)
+		bn.and w2, w5, w6
+		bn.rshi w5, w31, w5 >> 4
+		jal x1, gf16_mul
+		bn.xor w7, w7, w0
 	NOP
-
-
+	
 	ecall
