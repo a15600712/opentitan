@@ -1,27 +1,28 @@
-.align 4
+/*gf16_mul_test.s*/
+
 .section .data
-/* 256-bit operand*/
+.balign 32
+/* 256-bit operand */
 val_a:
     .word 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0, 0x12345678, 0x9ABCDEF0
+.balign 32
 val_b:
-/* 256-bit operand: "F" in the lowest word, zeros above. */
-    .word 0x0000000F, 0, 0, 0, 0, 0, 0, 0
-
+/* 256-bit operand: space for 256 bits (32 bytes) */
+    .word 0,0,0,0,0,0,0,0
 
 .section .text
-
-
+.balign 4
 .global main
 main:
-    /*load val_a in to w01*/
+    /* load val_a into w01 */
     la x5, val_a
     li x6, 1
-    bn.lid x6,0(x5)
+    bn.lid x6, 0(x5)
 
-    /*load val_b in to w02*/
+    /* load val_b into w02 */
     la x5, val_b
     li x6, 2
-    bn.lid x6,0(x5)
+    bn.lid x6, 0(x5)
 
     jal x1, gf16_mul
 

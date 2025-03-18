@@ -3,16 +3,13 @@
 Define a gf16 multiply function 
 using 256 bit WRD
 */
-.align 4
-
 .section .data
-    qword_msb:
-        .word 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888
-
-
+.balign 32
+qword_msb:
+.word 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888, 0x88888888
 .section .text
+.balign 4
 .global gf16_mul
-
 /*
 @param[out]  w0: ( Result = a * b)
 @param[in]   w1: ( input a ) 64 gf16 element (256bits)
@@ -35,10 +32,9 @@ gf16_mul:
     /*make sure w31 is zero*/
     bn.xor w31, w31, w31
     
-    /*Set up msb_mask in w3*/
     la x5, qword_msb
     li x6, 3
-    bn.lid x6, 0(x5)       
+    bn.lid x6, 0(x5)  
     /*w30= b & 1*/
 
     bn.addi w27, w27, 1 /*{temp} w30 = 1 */
@@ -140,7 +136,4 @@ gf16_mul:
     bn.mulqacc.wo   w29, w1.3, w30.0, 192  
 
     bn.xor w0, w0, w29
-
-
-
     ret
