@@ -49,6 +49,11 @@ static const uint32_t kGpioVals[] = {0xAAAAAAAA, 0x55555555, 0xA5A5A5A5,
 static void test_gpio_write(uint32_t write_val, uint32_t compare_mask) {
   CHECK_DIF_OK(dif_gpio_write_all(&gpio, write_val));
 
+  // The GPIO output signals are routed through pinmux back to the GPIO block
+  // and there are synchronizers involved so the inputs may not be available
+  // immediately, and may in fact arrive at different times.
+  busy_spin_micros(1);
+
   uint32_t read_val = 0;
   CHECK_DIF_OK(dif_gpio_read_all(&gpio, &read_val));
 
@@ -74,8 +79,8 @@ bool test_main(void) {
       dt_periph_io_t periph_io =
           dt_gpio_periph_io(kGpioDt, kDtGpioPeriphIoGpio0 + i);
       dt_pad_t pad = kPinmuxTestutilsGpioPads[i];
-      CHECK_DIF_OK(dif_pinmux_mio_select_input(&pinmux, periph_io, pad));
-      CHECK_DIF_OK(dif_pinmux_mio_select_output(&pinmux, pad, periph_io));
+      CHECK_STATUS_OK(pinmux_testutils_connect(&pinmux, periph_io,
+                                               kDtPeriphIoDirInout, pad));
     }
   }
   CHECK_DIF_OK(dif_gpio_init_from_dt(kGpioDt, &gpio));

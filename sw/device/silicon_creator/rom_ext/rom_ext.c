@@ -37,6 +37,7 @@
 #include "sw/device/silicon_creator/lib/manifest_def.h"
 #include "sw/device/silicon_creator/lib/ownership/ownership.h"
 #include "sw/device/silicon_creator/lib/ownership/ownership_activate.h"
+#include "sw/device/silicon_creator/lib/ownership/ownership_key.h"
 #include "sw/device/silicon_creator/lib/ownership/ownership_unlock.h"
 #include "sw/device/silicon_creator/lib/shutdown.h"
 #include "sw/device/silicon_creator/lib/sigverify/ecdsa_p256_key.h"
@@ -139,7 +140,7 @@ static rom_error_t rom_ext_init(boot_data_t *boot_data) {
   // Configure UART0 as stdout.
   uart_init(kUartNCOValue);
 
-  // Reclaim entries 0 ~ 7 from ROM and IMM_ROM_EXT.
+  // Reclaim entries 0 ~ 7 from ROM and ROM_EXT IMM_SECTION.
   for (int8_t i = 7; i >= 0; --i) {
     epmp_clear((uint8_t)i);
   }
@@ -257,7 +258,7 @@ static uintptr_t owner_vma_get(const manifest_t *manifest, uintptr_t lma_addr) {
 }
 
 OT_WARN_UNUSED_RESULT
-static rom_error_t rom_ext_boot(boot_data_t *boot_data,
+static rom_error_t rom_ext_boot(boot_data_t *boot_data, boot_log_t *boot_log,
                                 const manifest_t *manifest) {
   // Determine which owner block the key came from and measure that block.
   hmac_digest_t owner_measurement;
@@ -364,7 +365,8 @@ static rom_error_t rom_ext_boot(boot_data_t *boot_data,
   ibex_addr_remap_lockdown(1);
 
   // Lock the flash according to the ownership configuration.
-  HARDENED_RETURN_IF_ERROR(ownership_flash_lockdown(boot_data, &owner_config));
+  HARDENED_RETURN_IF_ERROR(
+      ownership_flash_lockdown(boot_data, boot_log->bl0_slot, &owner_config));
 
   dbg_print_epmp();
 
@@ -383,7 +385,8 @@ static rom_error_t rom_ext_boot(boot_data_t *boot_data,
 
 OT_WARN_UNUSED_RESULT
 static rom_error_t boot_svc_next_boot_bl0_slot_handler(
-    boot_svc_msg_t *boot_svc_msg, boot_data_t *boot_data) {
+    boot_svc_msg_t *boot_svc_msg, boot_data_t *boot_data,
+    boot_log_t *boot_log) {
   uint32_t active_slot = boot_data->primary_bl0_slot;
   uint32_t primary_slot = boot_svc_msg->next_boot_bl0_slot_req.primary_bl0_slot;
   rom_error_t error = kErrorOk;
@@ -400,6 +403,8 @@ static rom_error_t boot_svc_next_boot_bl0_slot_handler(
         // Read the boot data back to ensure the correct slot is booted this
         // time.
         HARDENED_RETURN_IF_ERROR(boot_data_read(lc_state, boot_data));
+        // Update the boot log.
+        boot_log->primary_bl0_slot = boot_data->primary_bl0_slot;
         break;
       case kBootSlotUnspecified:
         // Do nothing.
@@ -486,7 +491,8 @@ static rom_error_t boot_svc_min_sec_ver_handler(boot_svc_msg_t *boot_svc_msg,
 }
 
 OT_WARN_UNUSED_RESULT
-static rom_error_t handle_boot_svc(boot_data_t *boot_data) {
+static rom_error_t handle_boot_svc(boot_data_t *boot_data,
+                                   boot_log_t *boot_log) {
   boot_svc_msg_t *boot_svc_msg = &retention_sram_get()->creator.boot_svc_msg;
   // TODO(lowRISC#22387): Examine the boot_svc code paths for boot loops.
   if (boot_svc_msg->header.identifier == kBootSvcIdentifier) {
@@ -499,7 +505,8 @@ static rom_error_t handle_boot_svc(boot_data_t *boot_data) {
         break;
       case kBootSvcNextBl0SlotReqType:
         HARDENED_CHECK_EQ(msg_type, kBootSvcNextBl0SlotReqType);
-        return boot_svc_next_boot_bl0_slot_handler(boot_svc_msg, boot_data);
+        return boot_svc_next_boot_bl0_slot_handler(boot_svc_msg, boot_data,
+                                                   boot_log);
       case kBootSvcMinBl0SecVerReqType:
         HARDENED_CHECK_EQ(msg_type, kBootSvcMinBl0SecVerReqType);
         return boot_svc_min_sec_ver_handler(boot_svc_msg, boot_data);
@@ -548,7 +555,7 @@ static rom_error_t rom_ext_try_next_stage(boot_data_t *boot_data,
     boot_log_digest_update(boot_log);
 
     // Boot fails if a verified ROM_EXT cannot be booted.
-    RETURN_IF_ERROR(rom_ext_boot(boot_data, manifests.ordered[i]));
+    RETURN_IF_ERROR(rom_ext_boot(boot_data, boot_log, manifests.ordered[i]));
     // `rom_ext_boot()` should never return `kErrorOk`, but if it does
     // we must shut down the chip instead of trying the next ROM_EXT.
     return kErrorRomExtBootFailed;
@@ -581,6 +588,10 @@ static rom_error_t rom_ext_start(boot_data_t *boot_data, boot_log_t *boot_log) {
   boot_log->rom_ext_major = self->version_major;
   boot_log->rom_ext_minor = self->version_minor;
   boot_log->rom_ext_size = CHIP_ROM_EXT_SIZE_MAX;
+  // Even though `primary_bl0_slot` can be changed by boot svc, we initialize
+  // it here so the "SetNextBl0" can do a one-time override of the RAM copy
+  // of `boot_data`.
+  boot_log->primary_bl0_slot = boot_data->primary_bl0_slot;
 
   // Initialize the chip ownership state.
   rom_error_t error;
@@ -601,7 +612,7 @@ static rom_error_t rom_ext_start(boot_data_t *boot_data, boot_log_t *boot_log) {
   uint32_t reset_reasons = retention_sram_get()->creator.reset_reasons;
   uint32_t skip_boot_svc = reset_reasons & (1 << kRstmgrReasonLowPowerExit);
   if (skip_boot_svc == 0) {
-    error = handle_boot_svc(boot_data);
+    error = handle_boot_svc(boot_data, boot_log);
     if (error == kErrorWriteBootdataThenReboot) {
       // Boot services reports errors by writing a status code into the reply
       // messages.  Regardless of whether a boot service request produced an
@@ -617,7 +628,6 @@ static rom_error_t rom_ext_start(boot_data_t *boot_data, boot_log_t *boot_log) {
   boot_log->ownership_transfers = boot_data->ownership_transfers;
   boot_log->rom_ext_min_sec_ver = boot_data->min_security_version_rom_ext;
   boot_log->bl0_min_sec_ver = boot_data->min_security_version_bl0;
-  boot_log->primary_bl0_slot = boot_data->primary_bl0_slot;
   boot_log_digest_update(boot_log);
 
   if (uart_break_detect(kRescueDetectTime) == kHardenedBoolTrue) {

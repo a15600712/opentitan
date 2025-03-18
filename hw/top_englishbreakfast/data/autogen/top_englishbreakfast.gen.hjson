@@ -671,6 +671,7 @@
     {
       name: gpio
       type: gpio
+      template_type: gpio
       clock_srcs:
       {
         clk_i: io_div4
@@ -688,6 +689,7 @@
       {
         GpioAsyncOn: "1"
       }
+      attr: ipgen
       clock_connections:
       {
         clk_i: clkmgr_aon_clocks.clk_io_div4_peri
@@ -2829,6 +2831,32 @@
           default: ""
           package: ""
           top_signame: pwrmgr_aon_low_power
+          index: -1
+        }
+        {
+          name: racl_policies
+          desc:
+            '''
+            Incoming RACL policy vector from a racl_ctrl instance.
+            The policy selection vector (parameter) selects the policy for each register.
+            '''
+          struct: racl_policy_vec
+          package: top_racl_pkg
+          type: uni
+          act: rcv
+          width: 1
+          inst_name: aon_timer_aon
+          index: -1
+        }
+        {
+          name: racl_error
+          desc: RACL error log information of this module.
+          struct: racl_error_log
+          package: top_racl_pkg
+          type: uni
+          act: req
+          width: 1
+          inst_name: aon_timer_aon
           index: -1
         }
         {
@@ -10559,6 +10587,32 @@
         default: ""
         package: ""
         top_signame: pwrmgr_aon_low_power
+        index: -1
+      }
+      {
+        name: racl_policies
+        desc:
+          '''
+          Incoming RACL policy vector from a racl_ctrl instance.
+          The policy selection vector (parameter) selects the policy for each register.
+          '''
+        struct: racl_policy_vec
+        package: top_racl_pkg
+        type: uni
+        act: rcv
+        width: 1
+        inst_name: aon_timer_aon
+        index: -1
+      }
+      {
+        name: racl_error
+        desc: RACL error log information of this module.
+        struct: racl_error_log
+        package: top_racl_pkg
+        type: uni
+        act: req
+        width: 1
+        inst_name: aon_timer_aon
         index: -1
       }
       {

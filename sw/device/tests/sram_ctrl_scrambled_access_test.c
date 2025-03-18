@@ -5,35 +5,44 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "dt/dt_rstmgr.h"
+#include "dt/dt_sram_ctrl.h"
 #include "sw/device/lib/base/macros.h"
 #include "sw/device/lib/base/mmio.h"
 #include "sw/device/lib/base/multibits.h"
 #include "sw/device/lib/base/stdasm.h"
 #include "sw/device/lib/dif/dif_rstmgr.h"
 #include "sw/device/lib/runtime/log.h"
-#include "sw/device/lib/testing/flash_ctrl_testutils.h"
 #include "sw/device/lib/testing/rand_testutils.h"
 #include "sw/device/lib/testing/rstmgr_testutils.h"
 #include "sw/device/lib/testing/sram_ctrl_testutils.h"
 #include "sw/device/lib/testing/test_framework/check.h"
 #include "sw/device/lib/testing/test_framework/ottf_main.h"
+#include "sw/device/lib/testing/test_framework/ottf_utils.h"
 
-#include "hw/top_earlgrey/sw/autogen/top_earlgrey.h"
 #include "rstmgr_regs.h"     // Generated.
 #include "sram_ctrl_regs.h"  // Generated.
 
 OTTF_DEFINE_TEST_CONFIG();
 
 enum {
-  /**
-   * Retention SRAM start address (inclusive).
-   */
+/**
+ * Retention SRAM start address (inclusive).
+ */
+#if defined(OPENTITAN_IS_EARLGREY)
   kRetSramBaseAddr = TOP_EARLGREY_SRAM_CTRL_RET_AON_RAM_BASE_ADDR,
+  kRetRamLastAddr =
+      kRetSramBaseAddr + TOP_EARLGREY_SRAM_CTRL_RET_AON_RAM_SIZE_BYTES - 1,
+#elif defined(OPENTITAN_IS_DARJEELING)
+  kRetSramBaseAddr = TOP_DARJEELING_SRAM_CTRL_RET_AON_RAM_BASE_ADDR,
+  kRetRamLastAddr =
+      kRetSramBaseAddr + TOP_DARJEELING_SRAM_CTRL_RET_AON_RAM_SIZE_BYTES - 1,
+#else
+#error Unsupported top
+#endif
 
   // See `sw/device/silicon_creator/lib/drivers/retention_sram.h`.
   kRetSramOwnerAddr = kRetSramBaseAddr + 4 + 2048,
-  kRetRamLastAddr =
-      kRetSramBaseAddr + TOP_EARLGREY_SRAM_CTRL_RET_AON_RAM_SIZE_BYTES - 1,
 
   kTestBufferSizeWords = 16,
   kTestBufferSizeBytes = kTestBufferSizeWords * sizeof(uint32_t),
@@ -101,7 +110,6 @@ static scramble_test_frame *reference_frame;
 
 static dif_sram_ctrl_t ret_sram;
 static dif_rstmgr_t rstmgr;
-static dif_flash_ctrl_state_t flash;
 
 /**
  * Test pattern to be written and read from SRAM.
@@ -186,7 +194,8 @@ static noreturn void main_sram_scramble(void) {
       : /* No outputs. */
       : [kMultiBitTrue] "I"(kMultiBitBool4True),
 
-        [kSramCtrlRegsBase] "r"(TOP_EARLGREY_SRAM_CTRL_MAIN_REGS_BASE_ADDR),
+        [kSramCtrlRegsBase] "r"(
+            dt_sram_ctrl_primary_reg_block(kDtSramCtrlMain)),
         [kSramCtrlOffset] "I"(SRAM_CTRL_CTRL_REG_OFFSET),
         [kSramCtrlStatusOffset] "I"(SRAM_CTRL_STATUS_REG_OFFSET),
 
@@ -195,7 +204,7 @@ static noreturn void main_sram_scramble(void) {
         [mainFrame] "r"(&scrambling_frame), [retFrame] "r"(&reference_frame),
         [kCopyLen] "r"(copy_len),
 
-        [kRstMgrRegsBase] "r"(TOP_EARLGREY_RSTMGR_AON_BASE_ADDR),
+        [kRstMgrRegsBase] "r"(dt_rstmgr_primary_reg_block(kDtRstmgrAon)),
         [kRstMgrResetReq] "I"(RSTMGR_RESET_REQ_REG_OFFSET)
       : "t0", "t1", "a2", "a3");
 
@@ -374,8 +383,8 @@ static status_t sync_testbench(uint8_t prior_phase, uint8_t next_phase) {
     test_status_set(kTestStatusInWfi);
     test_status_set(kTestStatusInTest);
 
-    TRY(flash_ctrl_testutils_backdoor_wait_update(&kTestPhase, prior_phase,
-                                                  kTestPhaseTimeoutUsec));
+    IBEX_TRY_SPIN_FOR(OTTF_BACKDOOR_READ(kTestPhase) != prior_phase,
+                      kTestPhaseTimeoutUsec);
 
     TRY_CHECK(kTestPhase == next_phase);
   }
@@ -440,16 +449,9 @@ extern uint8_t _stack_start[];
 extern uint8_t _freertos_heap_start[];
 
 bool test_main(void) {
-  CHECK_DIF_OK(dif_rstmgr_init(
-      mmio_region_from_addr(TOP_EARLGREY_RSTMGR_AON_BASE_ADDR), &rstmgr));
+  CHECK_DIF_OK(dif_rstmgr_init_from_dt(kDtRstmgrAon, &rstmgr));
 
-  CHECK_DIF_OK(dif_sram_ctrl_init(
-      mmio_region_from_addr(TOP_EARLGREY_SRAM_CTRL_RET_AON_REGS_BASE_ADDR),
-      &ret_sram));
-
-  if (kDeviceType == kDeviceSimDV) {
-    CHECK_STATUS_OK(flash_ctrl_testutils_backdoor_init(&flash));
-  }
+  CHECK_DIF_OK(dif_sram_ctrl_init_from_dt(kDtSramCtrlRetAon, &ret_sram));
 
   main_sram_addr = OT_ALIGN_MEM(rand_testutils_gen32_range(
       (uintptr_t)_freertos_heap_start,

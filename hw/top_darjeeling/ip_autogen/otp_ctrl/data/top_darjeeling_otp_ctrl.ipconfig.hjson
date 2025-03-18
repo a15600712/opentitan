@@ -1650,6 +1650,23 @@
               offset: 15992
             }
             {
+              name: EN_CSRNG_SW_APP_READ
+              size: 1
+              ismubi: true
+              inv_default: 105
+              desc:
+                '''
+                Enablement of CSRNG software application interface. A
+                kMultiBitBool8True value enables, while all other values
+                disable. Enablement is required to extract output from
+                CSRNG via software.
+                '''
+              isdigest: false
+              iskeymgr_creator: false
+              iskeymgr_owner: false
+              offset: 15996
+            }
+            {
               name: EN_SRAM_IFETCH
               size: 1
               ismubi: true
@@ -1657,7 +1674,7 @@
               isdigest: false
               iskeymgr_creator: false
               iskeymgr_owner: false
-              offset: 15996
+              offset: 15997
             }
             {
               name: HW_CFG1_DIGEST
@@ -1988,5 +2005,13 @@
       ]
     }
     topname: darjeeling
+    uniquified_modules:
+    {
+      gpio: gpio
+      racl_ctrl: racl_ctrl
+      ac_range_check: ac_range_check
+      alert_handler: alert_handler
+      rv_plic: rv_plic
+    }
   }
 }
