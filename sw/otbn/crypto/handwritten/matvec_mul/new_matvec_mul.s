@@ -47,7 +47,9 @@ _gf16matvec_mul:
     /*make sure w31 is zero*/
 	bn.xor w31, w31, w31
 
-    
+    /*x2:accumulator*/
+    la x2, accumulator
+
     /*x3:matrixA*/
     la x3, matrixA
 
@@ -76,10 +78,7 @@ _gf16matvec_mul:
     /*Elements per 256-bit register (64 × 4-bit elements)*/
     addi x14, x0, 64
 
-    loop x7, 21
-        /*x2:accumulator*/
-        la x2, accumulator
-
+    loop x7, 20
         /*x11:(temp)n_A_byte{x4}*/
         add x11,x0,x4
         /*select LSB from w5 then store into w2*/
