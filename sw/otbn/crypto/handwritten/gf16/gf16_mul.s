@@ -11,16 +11,12 @@ qword_msb:
 .balign 4
 .global gf16_mul
 /*
-x5,x6
+x5,x6 will be used
 @param[out]  w0: ( Result = a * b)
 @param[in]   w1: ( input a ) 64 gf16 element (256bits)
 @param[in]   w2: ( input b )  1 gf16 element (256bits)
 w3: msb_mask
-w4: a_msb
-w5: 
-w6: 
-w7:
-w8: 
+w4: a_msb 
 w27: one
 w28: temp
 w29: temp
