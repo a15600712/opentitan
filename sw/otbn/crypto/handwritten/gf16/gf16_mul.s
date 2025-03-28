@@ -133,4 +133,5 @@ gf16_mul:
     bn.mulqacc.wo   w29, w1.3, w30.0, 192  
 
     bn.xor w0, w0, w29
+   
     ret

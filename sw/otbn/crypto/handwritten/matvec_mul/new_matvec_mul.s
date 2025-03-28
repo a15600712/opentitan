@@ -9,15 +9,18 @@ accumulator:
     
 .balign 32
 matrixA:
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
+    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
+    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
     .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
     .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
 
+    
     .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
     .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
+    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
+    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
+
+    
 .balign 4
 n_A_byte:
     .word 0x40 
@@ -26,7 +29,7 @@ n_A_width:
     .word 0x2
 .balign 32
 vectorB:
-    .word 0x11
+    .word 0x22
 
 .section .text
 .balign 4  
@@ -46,7 +49,8 @@ w7:accumulator
 _gf16matvec_mul:
     /*make sure w31 is zero*/
 	bn.xor w31, w31, w31
-
+    /*make sure register for accumulator is zero */
+    bn.xor w7, w7, w7
     /*x2:accumulator*/
     la x2, accumulator
 
@@ -55,11 +59,11 @@ _gf16matvec_mul:
 
     /*x4:n_A_byte*/
     la x4, n_A_byte
+    lw x4, 0(x4)
 
     /*x7:n_A_width*/
     la x7, n_A_width
     lw x7, 0(x7)
-
     /*x8:vectorB*/
     la x8, vectorB
 
@@ -78,7 +82,9 @@ _gf16matvec_mul:
     /*Elements per 256-bit register (64 × 4-bit elements)*/
     addi x14, x0, 64
 
-    loop x7, 20
+
+    loop x7, 21
+        
         /*x11:(temp)n_A_byte{x4}*/
         add x11,x0,x4
         /*select LSB from w5 then store into w2*/
@@ -111,7 +117,7 @@ _gf16matvec_mul:
         A_vecbyte_mul_done:
 
         bn.rshi w5, w31, w5 >> 4
-        la x2, 0x0
+        la x2, accumulator
         addi x13,x13,1
         
         bne x13,x14,skip_load_next_vecB

@@ -32,7 +32,7 @@ ELF_FILE = "/home/anon/otbn-mq/opentitan/bazel-bin/sw/otbn/crypto/handwritten/ma
 #   - offset: memory offset in bytes (integer) - must be word-aligned (multiple of 4)
 #   - data: hex string representing bytes to inject
 DATA_INJECTIONS = [
- 
+
 ]
 
 # Display verbose execution output
