@@ -25,13 +25,18 @@ sys.path.insert(0, OPENTITAN_ROOT)
 ###########################################
 
 # Path to the ELF file to execute (relative to OPENTITAN_ROOT)
-ELF_FILE = "/home/anon/otbn-mq/opentitan/bazel-bin/sw/otbn/crypto/handwritten/matvec_mul/new_matvec_mul_test.elf"
+ELF_FILE = "/home/anon/otbn-mq/opentitan/bazel-bin/sw/otbn/crypto/handwritten/matvec_mul/gf16_matvec_mul_test.elf"
 
 # Data injections as a list of (offset, data) tuples
 # Each tuple specifies:
 #   - offset: memory offset in bytes (integer) - must be word-aligned (multiple of 4)
 #   - data: hex string representing bytes to inject
 DATA_INJECTIONS = [
+    (0x20,"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+    (0x60,"0x1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"),
+    (0xE0,"0x40"),
+    (0xE4,"0x2"),
+    (0x100,"0x0000000000000000000000000000000000000000000000000000000000000021"),
 
 ]
 

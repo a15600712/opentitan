@@ -9,7 +9,7 @@ otbn_binary(
 )
 
 otbn_binary(
-    name="new_matvec_mul_test",
-    srcs=["new_matvec_mul.s"],
+    name="gf16_matvec_mul_test",
+    srcs=["gf16_matvec_mul.s"],
     deps=["//sw/otbn/crypto/handwritten/gf16:gf16_mul"],
 )
