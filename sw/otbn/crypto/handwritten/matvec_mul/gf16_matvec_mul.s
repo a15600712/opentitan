@@ -1,37 +1,22 @@
 /*new_matvec_mul.s*/
-/*
+
 .section .data
 .balign 32
 accumulator:
-    .word 0x0, 0x0, 0x0, 0x0
-    .word 0x0, 0x0, 0x0, 0x0
-    .word 0x0, 0x0, 0x0, 0x0
-    .word 0x0, 0x0, 0x0, 0x0
-    
+    .zero 2048 /* Reserve 2048 bytes for 4096 4-bit results*/
 .balign 32
 matrixA:
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
-
-    
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x22222222, 0x22222222, 0x22222222, 0x22222222
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
-    .word 0x11111111, 0x11111111, 0x11111111, 0x11111111
-
-    
+    .zero 196608 /* Reserve 196608 bytes for matrix data*/
 .balign 4
 n_A_byte:
-    .word 0x40 
+    .word 2048 /* 0x00000800 - Size of one column in bytes*/
 .balign 4
 n_A_width:
-    .word 0x2
+    .word 96   /* 0x00000060 - Number of columns  vector B elements*/
 .balign 32
 vectorB:
-    .word 0x21
-*/
+    .zero 64 /* Reserve 64 bytes for vector B data*/
+
 .section .text
 .balign 4  
 .global _gf16matvec_mul
@@ -53,30 +38,27 @@ _gf16matvec_mul:
     /*make sure register for accumulator is zero */
     bn.xor w7, w7, w7
     /*x2:accumulator*/
-    /*la x2, accumulator*/
-    la x2, 0x20
+    la x2, accumulator
+
 
     /*x3:matrixA*/
-    /*la x3, matrixA*/
-    la x3, 0x60
+    la x3, matrixA
+
 
     /*x4:n_A_byte*/
-    /*la x4, n_A_byte
-    lw x4, 0(x4)*/
-    la x4, 0x860
+    la x4, n_A_byte
     lw x4, 0(x4)
 
+
     /*x7:n_A_width*/
-    /*
     la x7, n_A_width
     lw x7, 0(x7)
-    */
-    la x7, 0x864
-    lw x7, 0(x7)
+
+
 
     /*x8:vectorB*/
-    /*la x8, vectorB*/
-    la x8, 0x880
+    la x8, vectorB
+
 
     /*w5:vectorB*/
 	addi x9,x0,5
@@ -129,7 +111,7 @@ _gf16matvec_mul:
 
         bn.rshi w5, w31, w5 >> 4
         /*la x2, accumulator*/
-        la x2, 0x20
+        la x2, accumulator
         addi x13,x13,1
         
         bne x13,x14,skip_load_next_vecB
