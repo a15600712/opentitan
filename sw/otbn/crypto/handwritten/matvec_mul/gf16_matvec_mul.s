@@ -63,7 +63,7 @@ _gf16matvec_mul:
     /*x4:n_A_byte*/
     /*la x4, n_A_byte
     lw x4, 0(x4)*/
-    la x4, 0xE0
+    la x4, 0x860
     lw x4, 0(x4)
 
     /*x7:n_A_width*/
@@ -71,12 +71,12 @@ _gf16matvec_mul:
     la x7, n_A_width
     lw x7, 0(x7)
     */
-    la x7, 0xE4
+    la x7, 0x864
     lw x7, 0(x7)
 
     /*x8:vectorB*/
     /*la x8, vectorB*/
-    la x8, 0x100
+    la x8, 0x880
 
     /*w5:vectorB*/
 	addi x9,x0,5

@@ -769,7 +769,7 @@
     // Dmem size (given as `items` below) must be a power of two.
     { window: {
         name: "DMEM",
-        items: "768", // 3 kB visible over the bus (1 kB scratch)
+        items: "131200", // 3 kB visible over the bus (1 kB scratch)
         unusual: "true", // Needed to avoid an error because of the non-power-of-two size
         swaccess: "rw",
         data-intg-passthru: "true",
