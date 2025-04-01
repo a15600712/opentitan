@@ -1,4 +1,4 @@
-/*new_matvec_mul.s*/
+/*gf16_matvec_mul.s*/
 
 .section .data
 .balign 32
