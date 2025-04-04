@@ -46,7 +46,7 @@ VECTOR_B_SIZE_BYTES = 48       # 96 elements * 0.5 bytes/element
 DATA_INJECTIONS = [
 
     (MATRIX_A_START, "0x" + "11" * MATRIX_A_SIZE_BYTES),
-    (VECTOR_B_START, "0x" + "00" *(64-VECTOR_B_SIZE_BYTES)+"22" * (VECTOR_B_SIZE_BYTES-1) +"7F" ),
+    (VECTOR_B_START, "0x" + "00" *(64-VECTOR_B_SIZE_BYTES)+"22" * (VECTOR_B_SIZE_BYTES-1) +"72" ),
 ]
 
 
@@ -209,7 +209,7 @@ def main():
 
         # Get the current DMEM contents
         dmem_bytes = bytearray(sim.dump_data())
-
+        print(f"  - DMEM size: {len(dmem_bytes)/1024} KiBytes")
         # For each injection, update the valid byte (1) and word value
         for offset, hex_data in DATA_INJECTIONS:
             words = hex_string_to_words(hex_data)
@@ -346,9 +346,9 @@ def main():
                 print(f"  {bit_name}")
 
     # Output sample of DMEM contents to console
-    print("\n========== DMEM CONTENTS SAMPLE ==========")
+    # print("\n========== DMEM CONTENTS SAMPLE ==========")
     # Just show a brief sample in the console
-    dump_dmem_hex(sim, 0x0, 0x100)  # Show just first 256 bytes
+    # dump_dmem_hex(sim, 0x0, 0x100)  # Show just first 256 bytes
     if DMEM_HEX_DUMP_FILE:
         print(f"Full DMEM contents written to {DMEM_HEX_DUMP_FILE}")
 
