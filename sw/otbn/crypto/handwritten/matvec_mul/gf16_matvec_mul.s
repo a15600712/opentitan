@@ -41,7 +41,7 @@ gf16_matvec_mul:
     addi x7, x0, 64
 
 
-    loop x13, 21
+    loop x13, 20
         
         /*x30:(temp)n_A_byte{x12}*/
         add x30,x0,x12

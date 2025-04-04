@@ -44,7 +44,7 @@ main:
     /*x14:vectorB*/
     la x14, vectorB
 
-    jal gf16_matvec_mul
+    jal x1, gf16_matvec_mul
 
     
 
